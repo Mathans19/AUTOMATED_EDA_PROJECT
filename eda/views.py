@@ -574,12 +574,19 @@ def ask_ai(request, file_id):
             info_str = buffer.getvalue()
             
             # System context
-            system_prompt = f"""You are a senior data scientist. Focus on accuracy and brevity.
-            Dataset Info:
-            File: {upload.name}
-            Columns: {list(df.columns)}
-            Shape: {df.shape}
-            Stats: {df.describe().to_string()}
+            system_prompt = f"""You are a senior data scientist assistant. 
+            Dataset Context:
+            - File: {upload.name}
+            - Columns: {list(df.columns)}
+            - Shape: {df.shape}
+            
+            RESPONSE GUIDELINES:
+            1. Use professional Markdown formatting.
+            2. ALWAYS use bullet points for lists.
+            3. BOLD key terms and column names.
+            4. If providing a cleaning plan, use a numbered list for steps.
+            5. Keep explanations concise but human-readable.
+            6. Do not include raw stats unless asked.
             """
 
             messages = [{"role": "system", "content": system_prompt}]

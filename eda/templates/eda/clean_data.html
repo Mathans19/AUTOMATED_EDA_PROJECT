@@ -6,7 +6,7 @@
 <div class="cleaning-workspace">
     <div class="grid-2">
         <!-- Control Panel -->
-        <div class="control-panel glass-card tilt-card widow-border">
+        <div class="control-panel glass-card widow-border">
             <div class="panel-header" style="justify-content: space-between; display: flex;">
                 <div style="display:flex; align-items:center; gap:var(--space-md);">
                     <div class="header-icon">
@@ -35,10 +35,10 @@
                 <!-- Health Score Display -->
                 <div class="health-score-container" style="margin-bottom: 20px; text-align: center;">
                     <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 700;">
-                        DATASET
-                        HEALTH</div>
-                    <div
-                        style="font-size: 2.2rem; font-weight: 800; color: {% if health_score > 80 %}var(--success){% elif health_score > 50 %}var(--warning){% else %}var(--danger){% endif %}; text-shadow: 0 0 10px rgba(0,255,0,0.1);">
+                        DATASET HEALTH
+                    </div>
+                    <div class="health-score-value health-{% if health_score > 80 %}good{% elif health_score > 50 %}warning{% else %}danger{% endif %}"
+                        style="font-size: 2.2rem; font-weight: 800; text-shadow: 0 0 10px rgba(0,255,0,0.1);">
                         {{ health_score }}<span style="font-size: 0.9rem; color: var(--text-muted);">/100</span>
                     </div>
                 </div>
@@ -66,14 +66,13 @@
                     {% if suggestions %}
                     {% for col, col_suggs in suggestions.items %}
                     {% for sug in col_suggs %}
-                    <div
-                        style="background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px; border-left: 3px solid {% if sug.type == 'warning' %}var(--danger){% elif sug.type == 'suggestion' %}var(--accent){% else %}var(--info){% endif %};">
+                    <div class="suggestion-pill border-{% if sug.type == 'warning' %}danger{% elif sug.type == 'suggestion' %}accent{% else %}info{% endif %}"
+                        style="background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px; border-left: 3px solid;">
                         <div
                             style="font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">
                             {{ col }}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">{{ sug.message
-                            }}
-                        </div>
+                            }}</div>
                     </div>
                     {% endfor %}
                     {% endfor %}
@@ -373,6 +372,31 @@
 
                     .mt-2 {
                         margin-top: 0.5rem;
+                    }
+
+                    /* Health and Suggestion colors */
+                    .health-good {
+                        color: var(--success);
+                    }
+
+                    .health-warning {
+                        color: var(--warning);
+                    }
+
+                    .health-danger {
+                        color: var(--danger);
+                    }
+
+                    .border-danger {
+                        border-left-color: var(--danger) !important;
+                    }
+
+                    .border-accent {
+                        border-left-color: var(--accent) !important;
+                    }
+
+                    .border-info {
+                        border-left-color: var(--info) !important;
                     }
                 </style>
 

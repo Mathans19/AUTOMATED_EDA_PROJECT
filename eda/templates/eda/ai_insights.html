@@ -42,23 +42,33 @@
             <!-- Welcome Message -->
             <div class="message system">
                 <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-                <div class="bubble">
+                <div class="bubble markdown-content">
                     Hello! I've analyzed your dataset. Ask me about trends, correlations, or specific columns.
                 </div>
             </div>
 
             <!-- Chat history will be appended here -->
-            {% for chat in chat_history %}
-            <div class="message {% if chat.role == 'user' %}user{% else %}system{% endif %}">
-                <div class="avatar">
-                    <i class="fa-solid fa-{% if chat.role == 'user' %}user{% else %}robot{% endif %}"></i>
+            <div id="chat-box" class="chat-messages">
+                {% for chat in chat_history %}
+                <div class="message {% if chat.role == 'user' %}user{% else %}assistant{% endif %}">
+                    <div class="avatar">
+                        <i class="fa-solid fa-{% if chat.role == 'user' %}user{% else %}robot{% endif %}"></i>
+                    </div>
+                    <div class="bubble markdown-content">
+                        {{ chat.content }}
+                    </div>
                 </div>
-                <div class="bubble">
-                    {{ chat.content|linebreaksbr }}
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script>
+            // Render existing messages as markdown
+            document.querySelectorAll('.markdown-content').forEach(el => {
+                el.innerHTML = marked.parse(el.textContent.trim());
+            });
+        </script>
 
         <!-- AI Quick Actions -->
         <div class="ai-quick-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
@@ -158,7 +168,7 @@
 
         msgDiv.innerHTML = `
             <div class="avatar">${avatar}</div>
-            <div class="bubble">${text}</div>
+            <div class="bubble markdown-content">${type === 'assistant' ? marked.parse(text) : text}</div>
         `;
 
         chatBox.appendChild(msgDiv);
@@ -180,7 +190,7 @@
         // Add loading indicator
         const loadingId = "loading-" + Date.now();
         const loadingDiv = document.createElement("div");
-        loadingDiv.className = "message system";
+        loadingDiv.className = "message assistant";
         loadingDiv.id = loadingId;
         loadingDiv.innerHTML = `
             <div class="avatar"><i class="fa-solid fa-robot"></i></div>
@@ -199,12 +209,13 @@
         })
             .then(response => response.json())
             .then(data => {
-                document.getElementById(loadingId).remove();
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
 
                 if (data.answer) {
-                    appendMessage(data.answer, "system");
+                    appendMessage(data.answer, "assistant");
                 } else {
-                    appendMessage("Sorry, I encountered an error: " + (data.error || "Unknown error"), "system");
+                    appendMessage("Sorry, I encountered an error: " + (data.error || "Unknown error"), "assistant");
                 }
             })
             .catch(error => {
