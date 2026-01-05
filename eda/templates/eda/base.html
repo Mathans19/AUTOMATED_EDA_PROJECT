@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -36,11 +37,9 @@
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --glass-border: rgba(255, 255, 255, 0.1);
-
+            --glass-border: rgba(0, 229, 255, 0.2);
             --iron-red: #e62117;
             --iron-gold: #f2c94c;
-
             --space-4: 4px;
             --space-8: 8px;
             --space-12: 12px;
@@ -49,15 +48,17 @@
             --space-32: 32px;
             --space-48: 48px;
             --space-64: 64px;
-
             --transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
             --radius: 12px;
         }
 
+        /* 🟢 1. CUSTOM CURSOR: Vibranium Shield */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            cursor: url('{% static "eda/images/shield_cursor.png" %}'),
+            auto;
         }
 
         body {
@@ -66,11 +67,14 @@
             color: var(--text-primary);
             line-height: 1.6;
             font-size: 15px;
-            background-image:
-                radial-gradient(circle at 10% 10%, rgba(230, 33, 23, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(0, 229, 255, 0.05) 0%, transparent 40%);
+            /* 🟢 2. HUD BACKGROUND ALIGNMENT */
+            background-image: url('{% static "eda/images/stark_hud.png" %}');
+            background-repeat: no-repeat;
+            background-position: center top;
+            background-size: cover;
             background-attachment: fixed;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         h1,
@@ -81,50 +85,149 @@
             letter-spacing: -0.02em;
         }
 
-        /* Avengers Special Classes */
+        /* 🟢 3. SCARLET WITCH: Wanda Glitch Effect */
         .wanda-text {
-            color: var(--iron-red);
-            text-shadow: 0 0 10px rgba(230, 33, 23, 0.4);
-            letter-spacing: 1px;
+            color: white;
+            position: relative;
+            text-shadow: 0 0 10px rgba(230, 33, 23, 0.8);
+            animation: wanda-glitch 4s infinite;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
+        @keyframes wanda-glitch {
+
+            0%,
+            90%,
+            100% {
+                transform: none;
+                opacity: 1;
+            }
+
+            91% {
+                transform: skewX(-10deg);
+                color: #0eceff;
+            }
+
+            92% {
+                transform: skewX(10deg);
+                color: #ff003c;
+                opacity: 0.8;
+            }
+
+            95% {
+                transform: skewY(2deg);
+            }
+        }
+
+        /* 🟢 4. THOR: Mjolnir Lightning Strike */
+        .thor-btn {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary), #0088ff);
+            border: none;
+            transition: all 0.2s ease;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .thor-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            transform: rotate(45deg);
+        }
+
+        .thor-btn:hover::after {
+            left: 150%;
+            transition: 0.4s ease-in-out;
+        }
+
+        .thor-btn:hover {
+            box-shadow: 0 0 25px var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* 🟢 5. BLACK WIDOW: Widow's Bite Border */
+        .widow-border {
+            border-left: 4px solid var(--iron-red) !important;
+            padding-left: var(--space-16);
+            background: rgba(230, 33, 23, 0.03);
+        }
+
+        /* 🟢 6. THE HULK: Gamma Pulse Success */
+        .hulk-pulse {
+            animation: gamma-pulse 2s infinite;
+        }
+
+        @keyframes gamma-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
+        }
+
+        /* 🟢 7. DOCTOR STRANGE: Mystic Portal Spinners */
+        .strange-spinner {
+            animation: mystic-spin 1.5s linear infinite;
+            color: #ff9d00 !important;
+            filter: drop-shadow(0 0 5px #ff4e00);
+        }
+
+        @keyframes mystic-spin {
+            0% {
+                transform: rotate(0deg) scale(1);
+                filter: hue-rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.2);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+                filter: hue-rotate(45deg);
+            }
+        }
+
+        /* Holographic Structural Components */
         .stark-card {
-            border: 1px solid var(--iron-gold) !important;
-            box-shadow: 0 0 15px rgba(242, 201, 76, 0.1);
-        }
-
-        .holo-plate {
-            background: rgba(0, 229, 255, 0.03);
-            border: 1px solid rgba(0, 229, 255, 0.2);
-            box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.1);
+            background: rgba(10, 13, 20, 0.7) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border) !important;
+            border-top: 3px solid var(--primary) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
             position: relative;
         }
 
-        .holo-plate::after {
+        .holo-plate {
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .holo-plate::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            animation: scan 3s linear infinite;
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(0);
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(100%);
-                opacity: 0;
-            }
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, rgba(0, 229, 255, 0.03) 2px, transparent 4px);
+            pointer-events: none;
         }
 
         .app-container {
@@ -350,6 +453,38 @@
             }
         }
 
+        @keyframes scan {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        /* 🟢 20. CUSTOM SCROLLBAR: Avengers Theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--iron-red), var(--primary));
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
         /* Utility */
         .flex {
             display: flex;
@@ -378,23 +513,23 @@
     <div class="app-container">
         <nav class="navbar">
             <div class="nav-brand">
-                <i class="fa-solid fa-shield-halved brand-icon"></i>
-                <span>Avengers Data Hub</span>
+                <i class="fa-solid fa-shield-halved brand-icon hulk-pulse" style="color: var(--primary);"></i>
+                <span class="wanda-text" style="font-size: 1.4rem;">STARK COMMAND</span>
             </div>
 
             <div class="nav-links">
                 <a href="{% url 'upload' %}"
                     class="nav-item {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
-                    <i class="fa-solid fa-satellite-dish"></i> <span>Uplink</span>
+                    <i class="fa-solid fa-satellite-dish"></i> <span>TESSERACT</span>
                 </a>
                 {% if file_id %}
                 <a href="{% url 'eda_report' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'eda_report' %}active{% endif %}">
-                    <i class="fa-solid fa-file-shield"></i> <span>Protocol</span>
+                    <i class="fa-solid fa-file-shield"></i> <span>DASHBOARD</span>
                 </a>
                 <a href="{% url 'clean_data' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'clean_data' %}active{% endif %}">
-                    <i class="fa-solid fa-vial-virus"></i> <span>Refine</span>
+                    <i class="fa-solid fa-vial-virus"></i> <span>REFINE</span>
                 </a>
                 <a href="{% url 'visualize_data' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'visualize_data' %}active{% endif %}">
@@ -402,7 +537,7 @@
                 </a>
                 <a href="{% url 'ask_ai' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'ask_ai' %}active{% endif %}">
-                    <i class="fa-solid fa-brain"></i> <span>Oracle</span>
+                    <i class="fa-solid fa-brain"></i> <span>ORACLE</span>
                 </a>
                 {% endif %}
             </div>

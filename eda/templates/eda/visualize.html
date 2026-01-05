@@ -6,20 +6,20 @@
 <div class="visualize-workspace">
     <div class="grid-2">
         <!-- Chart Controls Sidebar -->
-        <div class="chart-controls glass-card stark-card">
+        <div class="chart-controls glass-card stark-card widow-border">
             <div class="controls-header" style="justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:var(--space-md);">
-                    <div class="header-icon" style="background: var(--iron-red);">
+                    <div class="header-icon hulk-pulse" style="background: var(--iron-red);">
                         <i class="fa-solid fa-microchip"></i>
                     </div>
                     <div>
-                        <h2 class="wanda-text">JARVIS CORE</h2>
-                        <p class="text-muted text-sm">Visual Synthesis Protocols</p>
+                        <h2 class="wanda-text">JARVIS ANALYSIS CORE</h2>
+                        <p class="text-muted text-sm">Tactical Visual Synthesis</p>
                     </div>
                 </div>
                 <div
                     style="font-size:0.7rem; color:var(--accent); border:1px solid var(--accent); padding:2px 6px; border-radius:4px; font-weight: 800;">
-                    STARK TECH
+                    STARK TECH V4.0
                 </div>
             </div>
 
@@ -92,6 +92,13 @@
                             <div class="chart-type-content holo-plate">
                                 <i class="fa-solid fa-table-cells"></i>
                                 <span>Heatmap</span>
+                            </div>
+                        </label>
+                        <label class="chart-type-card">
+                            <input type="radio" name="chart_type" value="pie" onchange="handleTypeChange()">
+                            <div class="chart-type-content holo-plate">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>Pie</span>
                             </div>
                         </label>
                     </div>
@@ -185,28 +192,6 @@
     </div>
 </div>
 
-<div id="chart-container" class="chart-container">
-    <div class="chart-placeholder">
-        <div class="placeholder-icon">
-            <i class="fa-solid fa-chart-line"></i>
-        </div>
-        <h3>Ready to Visualize</h3>
-        <p>Select a chart type and configure axes to generate your interactive visualization</p>
-    </div>
-</div>
-
-<!-- Chart Insight Panel -->
-<div id="chart-meta" class="chart-meta-panel">
-    <div class="chart-meta-header">
-        <h3><i class="fa-solid fa-circle-info"></i> Chart Insights</h3>
-    </div>
-    <div id="chart-meta-body" class="chart-meta-body text-sm text-muted">
-        Select a chart type and generate it to see tailored tips here.
-    </div>
-</div>
-</div>
-</div>
-</div>
 
 <style>
     .visualize-workspace {
@@ -505,7 +490,7 @@
         const sizeCol = document.getElementById("size_col") ? document.getElementById("size_col").value : null;
 
         const originalBtnText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Generating...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch strange-spinner"></i> SYNTHESIZING...';
         btn.disabled = true;
 
         fetch(VIZ_URL, {

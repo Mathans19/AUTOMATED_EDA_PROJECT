@@ -8,8 +8,9 @@
     <!-- Header -->
     <header class="report-header">
         <div class="header-left">
-            <h1 class="wanda-text">TACTICAL DASHBOARD</h1>
-            <p class="text-secondary">Project Insight: Dataset structural analysis & integrity check.</p>
+            <h1 class="wanda-text" style="font-size: 2.2rem;">MISSION SUMMARY: PROJECT TESSERACT</h1>
+            <p class="text-secondary" style="letter-spacing: 2px;">Status: Dataset structural analysis & integrity check
+                complete.</p>
         </div>
         <div class="header-actions">
             <a href="{% url 'clean_data' file_id=file_id %}" class="btn btn-secondary stark-link">
@@ -27,8 +28,9 @@
         <!-- Main Content -->
         <div class="report-main">
             <!-- Key Metrics -->
-            <section class="report-section glass-card holo-plate stark-card">
-                <h3 class="wanda-text"><i class="fa-solid fa-gauge-high"></i> CORE POWER LEVELS</h3>
+            <section class="report-section glass-card holo-plate stark-card widow-border">
+                <h3 class="wanda-text hulk-pulse" style="font-size: 1.1rem;"><i class="fa-solid fa-gauge-high"></i> CORE
+                    POWER LEVELS</h3>
                 <div class="metrics-grid">
                     <div class="metric-item" style="border-color: var(--primary);">
                         <span class="metric-label">Node Count</span>
@@ -51,8 +53,9 @@
             </section>
 
             <!-- Column Inventory -->
-            <section class="report-section glass-card holo-plate">
-                <h3 class="wanda-text"><i class="fa-solid fa-table-list"></i> SIGNAL MANIFEST</h3>
+            <section class="report-section glass-card holo-plate widow-border">
+                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-table-list"></i> SIGNAL MANIFEST
+                </h3>
                 <div class="table-container" style="border-color: var(--primary);">
                     <table class="table">
                         <thead>
@@ -91,8 +94,9 @@
 
             <!-- Correlation -->
             {% if correlation_matrix and numeric_cols|length > 1 %}
-            <section class="report-section glass-card holo-plate stark-card">
-                <h3 class="wanda-text"><i class="fa-solid fa-circle-nodes"></i> LINKAGE ANALYSIS</h3>
+            <section class="report-section glass-card holo-plate stark-card widow-border">
+                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-circle-nodes"></i> LINKAGE
+                    ANALYSIS</h3>
                 <div id="correlation-chart" style="width: 100%; min-height: 400px; padding: var(--space-16);"></div>
             </section>
             {% endif %}

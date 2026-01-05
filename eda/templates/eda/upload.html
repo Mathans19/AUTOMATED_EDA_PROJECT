@@ -3,85 +3,92 @@
 {% block title %}INITIATE UPLINK - Avengers Data Hub{% endblock %}
 
 {% block content %}
-<div class="upload-container">
-    <div class="upload-card glass-card holo-plate stark-card"
-        style="max-width: 600px; margin: 40px auto; padding: 40px;">
-        <div class="upload-header" style="text-align: center; margin-bottom: 30px;">
-            <div class="shield-logo" style="font-size: 50px; color: var(--primary); margin-bottom: 20px;">
-                <i class="fa-solid fa-shield-halved"></i>
+<div class="upload-screen"
+    style="height: calc(100vh - 120px); display: flex; align-items: center; justify-content: center; overflow: hidden; background: url(&quot;{% static 'eda/images/tesseract.png' %}&quot;) no-repeat center center; background-size: cover; border-radius: 20px; box-shadow: inset 0 0 100px #000;">
+
+    <div class="upload-card stark-card holo-plate"
+        style="width: 550px; padding: 40px; border-radius: 30px; border: 2px solid var(--primary) !important;">
+
+        <div class="upload-header text-center" style="margin-bottom: 30px;">
+            <div class="shield-logo hulk-pulse" style="font-size: 60px; color: var(--primary); margin-bottom: 20px;">
+                <i class="fa-solid fa-cube"></i>
             </div>
-            <h1 class="wanda-text">INBOUND UPLINK CMD</h1>
-            <p class="text-secondary">Deploy dataset for tactical analysis & refinement.</p>
+            <h1 class="wanda-text">TESSERACT UPLINK</h1>
+            <p class="text-secondary" style="font-size: 0.9rem; letter-spacing: 1px;">Initialize dimensional data
+                transmission protocols.</p>
         </div>
 
         <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
             {% csrf_token %}
             <div id="drop-zone" class="drop-zone holo-plate"
-                style="border: 2px dashed var(--primary); padding: 60px 20px; transition: 0.3s; border-radius: 12px; cursor: pointer; text-align: center;">
+                style="border: 2px dashed var(--primary); padding: 50px 20px; border-radius: 20px; text-align: center; background: rgba(0,229,255,0.02);">
                 <input type="file" name="file" id="fileInput" accept=".csv" hidden>
+
                 <div class="drop-content">
-                    <div class="upload-icon-box" style="font-size: 40px; color: var(--accent); margin-bottom: 15px;">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="upload-icon-box" style="font-size: 50px; color: var(--accent); margin-bottom: 15px;">
+                        <i class="fa-solid fa-atom"></i>
                     </div>
-                    <h3 class="wanda-text">DROP COMMAND MODULE</h3>
-                    <p>Transmit CSV data stream directly or <span class="browse-btn"
-                            style="color: var(--primary); font-weight: 700;">Open Comms</span></p>
-                    <span class="file-limit" style="font-size: 11px; color: var(--text-muted);">Protocol Limit:
-                        50MB</span>
+                    <h3 class="wanda-text" style="font-size: 1.2rem;">COMMAND MODULE</h3>
+                    <p class="text-sm">Transmit CSV stream or <span class="browse-btn"
+                            style="color: var(--primary); font-weight: 800;">OPEN COMMS</span></p>
+                    <span style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">CAPACITY: 50MB MAX</span>
                 </div>
 
-                <!-- Progress State -->
+                <!-- Progress State: Strange Spinner -->
                 <div id="upload-progress" class="upload-progress hidden" style="margin-top: 20px;">
                     <div class="spinner-box">
-                        <i class="fa-solid fa-atom fa-spin" style="font-size: 30px; color: var(--primary);"></i>
+                        <i class="fa-solid fa-circle-notch strange-spinner" style="font-size: 40px;"></i>
                     </div>
                     <div class="progress-info" style="margin-top: 15px;">
-                        <span id="progress-text">Securing Data Stream...</span>
+                        <span id="progress-text" class="wanda-text" style="font-size: 0.8rem;">SECURIING DIMENSIONAL
+                            SIGNAL...</span>
                         <div class="progress-bar-container"
-                            style="height: 4px; background: rgba(255,255,255,0.05); margin-top: 10px; border-radius: 2px;">
+                            style="height: 6px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 10px; overflow: hidden;">
                             <div id="progress-bar" class="progress-bar"
-                                style="height: 100%; background: var(--primary); width: 0%;"></div>
+                                style="height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; box-shadow: 0 0 15px var(--primary);">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Selected File State -->
                 <div id="file-ready" class="file-ready hidden" style="margin-top: 20px;">
-                    <i class="fa-solid fa-file-csv selected-icon" style="font-size: 40px; color: var(--success);"></i>
+                    <i class="fa-solid fa-file-csv selected-icon hulk-pulse"
+                        style="font-size: 50px; color: var(--success);"></i>
                     <div class="ready-info" style="margin-top: 10px;">
-                        <span id="file-name" class="wanda-text">Unknown.csv</span>
-                        <span id="file-size" class="text-xs"
-                            style="display: block; font-size: 12px; color: var(--text-muted);">0 KB</span>
+                        <span id="file-name" class="wanda-text" style="font-size: 1rem;">Unknown.csv</span>
+                        <span id="file-size" class="text-xs" style="display: block; color: var(--text-muted);">0
+                            KB</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" onclick="resetUpload()"
-                        style="margin-top: 10px; padding: 5px 15px; font-size: 12px;">RESET</button>
+                    <button type="button" class="btn btn-secondary thor-btn" onclick="resetUpload()"
+                        style="margin-top: 15px; padding: 5px 20px; font-size: 11px;">ABORT</button>
                 </div>
             </div>
 
             <div class="form-actions" style="margin-top: 30px;">
-                <button type="submit" id="submitBtn" class="btn btn-primary thor-btn w-full btn-lg" disabled>
+                <button type="submit" id="submitBtn" class="btn btn-primary thor-btn w-full btn-lg" disabled
+                    style="height: 55px; font-size: 1.1rem; border: 1px solid var(--accent);">
                     <i class="fa-solid fa-bolt-lightning"></i>
-                    <span>FINALIZE DEPLOYMENT</span>
+                    <span>EXECUTE UPLINK</span>
                 </button>
             </div>
         </form>
 
-        <div class="upload-features"
-            style="display: flex; justify-content: space-around; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--glass-border);">
-            <div class="u-feature" style="text-align: center; font-size: 12px;">
-                <i class="fa-solid fa-lock"
-                    style="display: block; font-size: 20px; color: var(--accent); margin-bottom: 5px;"></i>
-                <span>Stark Encrypted</span>
+        <div class="upload-features widow-border"
+            style="display: flex; justify-content: space-around; margin-top: 30px; padding-top: 25px;">
+            <div class="u-feature text-center">
+                <i class="fa-solid fa-lock" style="font-size: 18px; color: var(--accent); margin-bottom: 5px;"></i>
+                <div style="font-size: 10px;">STARK SECURE</div>
             </div>
-            <div class="u-feature" style="text-align: center; font-size: 12px;">
+            <div class="u-feature text-center">
                 <i class="fa-solid fa-microchip"
-                    style="display: block; font-size: 20px; color: var(--primary); margin-bottom: 5px;"></i>
-                <span>Auto-Parse Core</span>
+                    style="font-size: 18px; color: var(--primary); margin-bottom: 5px;"></i>
+                <div style="font-size: 10px;">AUTO-REFINERY</div>
             </div>
-            <div class="u-feature" style="text-align: center; font-size: 12px;">
+            <div class="u-feature text-center">
                 <i class="fa-solid fa-shield-virus"
-                    style="display: block; font-size: 20px; color: var(--success); margin-bottom: 5px;"></i>
-                <span>SHIELD Scanned</span>
+                    style="font-size: 18px; color: var(--success); margin-bottom: 5px;"></i>
+                <div style="font-size: 10px;">S.H.I.E.L.D. VERIFIED</div>
             </div>
         </div>
     </div>

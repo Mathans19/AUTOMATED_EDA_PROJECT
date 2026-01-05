@@ -14,16 +14,20 @@
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
                         <div>
-                            <h2 class="wanda-text">S.H.I.E.L.D. HUB</h2>
-                            <p class="text-secondary text-xs">Integrity Protocol v{{ current_version|default:1 }}</p>
+                            <h2 class="wanda-text">S.H.I.E.L.D. TACTICAL HUB</h2>
+                            <p class="text-secondary text-xs" style="letter-spacing: 2px;">Integrity Protocol v{{
+                                current_version|default:1 }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="health-summary">
                     <div class="health-metric">
-                        <span class="metric-label">Dataset Integrity</span>
-                        <span class="metric-value wanda-text" id="health-score-val">{{ health_score }}</span>
+                        <span class="metric-label"
+                            style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Signal
+                            Integrity</span>
+                        <span class="metric-value wanda-text hulk-pulse" id="health-score-val"
+                            style="font-size: 2.2rem;">{{ health_score }}</span>
                     </div>
                     <div class="progress-rail" style="height: 6px; background: rgba(255,255,255,0.05);">
                         <div id="health-score-bar" class="progress-fill"
@@ -45,8 +49,9 @@
             </div>
 
             <!-- Suggestions -->
-            <div class="glass-card section-card holo-plate">
-                <h3 class="wanda-text"><i class="fa-solid fa-wand-sparkles"></i> Stark Intel</h3>
+            <div class="glass-card section-card holo-plate widow-border">
+                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-wand-sparkles"></i> Stark Intel
+                </h3>
                 <div class="suggestion-stack" id="suggestions-box">
                     {% for col, col_suggs in suggestions.items %}
                     {% for sugg in col_suggs %}
@@ -71,8 +76,9 @@
             </div>
 
             <!-- Operations Form -->
-            <div class="glass-card section-card stark-card">
-                <h3 class="wanda-text"><i class="fa-solid fa-screwdriver-wrench"></i> Refinement</h3>
+            <div class="glass-card section-card stark-card widow-border">
+                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-screwdriver-wrench"></i>
+                    Refinement</h3>
                 <form id="cleaningForm" onsubmit="event.preventDefault(); updateTable(event.submitter);">
                     {% csrf_token %}
 
@@ -644,7 +650,7 @@
 
         submitBtn.disabled = true;
         const origText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch strange-spinner"></i> PROCESSING...';
 
         const skel = document.getElementById('table-skeleton');
         const cont = document.getElementById('table-container');
