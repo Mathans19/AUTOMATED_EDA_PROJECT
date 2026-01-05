@@ -1,0 +1,301 @@
+{% extends 'eda/base_lovable.html' %}
+
+{% block title %}Visualize - WANDA Analytics{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div style="margin-bottom: 3rem;">
+        <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; font-weight: 700; margin-bottom: 1rem;">
+            <span class="gradient-text text-glow">Visual Projections</span>
+        </h1>
+        <p
+            style="color: hsl(var(--muted-foreground)); font-size: 1rem; max-width: 42rem; font-family: 'Inter', sans-serif;">
+            Project your data into stunning visual dimensions. Each chart reveals a new facet of your reality.
+        </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 250px 1fr; gap: 1.5rem;">
+        <!-- Chart Type Selector -->
+        <div>
+            <div class="glass-card" style="padding: 1.5rem; position: sticky; top: 7rem;">
+                <h3
+                    style="font-family: 'Cinzel', serif; font-size: 1.125rem; color: hsl(var(--foreground)); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="layers" style="width: 1.25rem; height: 1.25rem; color: hsl(var(--scarlet));"></i>
+                    Chart Types
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem;">
+                    {% for chart in chart_types %}
+                    <button class="chart-type-btn {% if chart.id == active_chart %}active{% endif %}"
+                        data-chart="{{ chart.id }}">
+                        <i data-lucide="{{ chart.icon }}" class="chart-icon"></i>
+                        <span>{{ chart.label }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <!-- Axis Controls form -->
+                <form id="vizForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="chart_type" id="id_chart_type" value="{{ active_chart }}">
+
+                    <div id="x-group">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: hsl(var(--primary)); font-weight: 700; margin-bottom: 0.5rem;">X
+                            AXIS</label>
+                        <select id="x_col" class="lovable-select">
+                            {% for col in all_cols %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="y-group">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: hsl(var(--primary)); font-weight: 700; margin-bottom: 0.5rem;">Y
+                            AXIS</label>
+                        <select id="y_col" class="lovable-select">
+                            <option value="">None (Auto)</option>
+                            {% for col in all_cols %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="color-group">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: hsl(var(--primary)); font-weight: 700; margin-bottom: 0.5rem;">COLOR
+                            BY</label>
+                        <select id="color_col" class="lovable-select">
+                            <option value="">None</option>
+                            {% for col in all_cols %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="magic-btn" style="width: 100%; margin-top: 1rem;">
+                        <i data-lucide="wand-2" style="width: 1rem; height: 1rem;"></i>
+                        Generate
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Chart Area -->
+        <div>
+            <div class="glass-card energy-pulse" style="padding: 2rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 1.25rem; color: hsl(var(--foreground));"
+                        id="chart-title">
+                        {{ active_chart_label }}
+                    </h2>
+                    <div
+                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: hsl(var(--muted-foreground)); font-family: 'Inter', sans-serif;">
+                        <span
+                            style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: hsl(var(--scarlet)); animation: pulse 2s ease-in-out infinite;"></span>
+                        Live Preview
+                    </div>
+                </div>
+
+                <div id="chart-container" style="transition: all 0.5s;">
+                    <!-- Plotly chart will be rendered here -->
+                    {% if chart_html %}
+                    {{ chart_html|safe }}
+                    {% else %}
+                    <div
+                        style="height: 400px; display: flex; align-items: center; justify-content: center; color: hsl(var(--muted-foreground)); font-family: 'Inter', sans-serif;">
+                        Select a chart type to visualize your data
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Legend -->
+                <div
+                    style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid hsl(var(--border)); display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+                    {% for series in legend_items %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="legend-dot" style="--dot-color: {{ series.color }};">
+                        </div>
+                        <span
+                            style="font-family: 'Inter', sans-serif; font-size: 0.875rem; color: hsl(var(--muted-foreground));">{{
+                            series.label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <!-- Quick Actions -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem;">
+                {% for action in quick_actions %}
+                <button class="magic-btn magic-btn-secondary"
+                    style="width: 100%; padding: 0.75rem; font-size: 0.875rem;">
+                    <i data-lucide="{{ action.icon }}" style="width: 1rem; height: 1rem;"></i>
+                    {{ action.label }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chart-type-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid transparent;
+        background: transparent;
+        color: hsl(var(--muted-foreground));
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        text-align: left;
+    }
+
+    .chart-type-btn:hover {
+        background: hsl(var(--muted) / 0.3);
+        color: hsl(var(--foreground));
+    }
+
+    .chart-type-btn.active {
+        box-shadow: 0 0 24px hsl(var(--scarlet) / 0.6);
+        background: linear-gradient(135deg, hsl(var(--scarlet-dark)), hsl(var(--blood)));
+        border-color: hsl(var(--scarlet) / 0.5);
+        color: white;
+    }
+
+    .chart-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .lovable-select {
+        width: 100%;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 0.375rem;
+        color: hsl(var(--foreground));
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        transition: all 0.3s;
+    }
+
+    .lovable-select:focus {
+        outline: none;
+        border-color: hsl(var(--scarlet) / 0.5);
+    }
+
+    .legend-dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: var(--dot-color);
+        box-shadow: 0 0 8px var(--dot-color);
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    const vizForm = document.getElementById('vizForm');
+    const chartContainer = document.getElementById('chart-container');
+    const chartTitle = document.getElementById('chart-title');
+    const chartTypeInput = document.getElementById('id_chart_type');
+
+    async function generateChart() {
+        chartContainer.style.opacity = '0.5';
+
+        const chartType = chartTypeInput.value;
+        const xCol = document.getElementById("x_col").value;
+        const yCol = document.getElementById("y_col").value;
+        const colorCol = document.getElementById("color_col").value;
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({
+                    chart_type: chartType,
+                    x_col: xCol,
+                    y_col: yCol,
+                    color_col: colorCol || null,
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                chartContainer.innerHTML = data.graph_html;
+                chartContainer.style.opacity = '1';
+
+                // Execute Plotly scripts
+                const scripts = chartContainer.querySelectorAll("script");
+                scripts.forEach(script => {
+                    const newScript = document.createElement("script");
+                    newScript.text = script.text;
+                    document.head.appendChild(newScript).parentNode.removeChild(newScript);
+                });
+            } else {
+                chartContainer.innerHTML = `<div style="height: 400px; display: flex; align-items: center; justify-content: center; color: hsl(var(--scarlet)); font-family: 'Inter', sans-serif;">Error: ${data.error}</div>`;
+                chartContainer.style.opacity = '1';
+            }
+        } catch (error) {
+            console.error("Viz Error:", error);
+            chartContainer.style.opacity = '1';
+        }
+    }
+
+    // Chart type selection
+    document.querySelectorAll('.chart-type-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const chartType = this.dataset.chart;
+            const chartLabel = this.querySelector('span').textContent;
+
+            // Update active state
+            document.querySelectorAll('.chart-type-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.borderColor = 'transparent';
+                b.style.color = 'hsl(var(--muted-foreground))';
+                b.style.boxShadow = 'none';
+            });
+
+            this.classList.add('active');
+            this.style.background = 'linear-gradient(135deg, hsl(var(--scarlet-dark)), hsl(var(--blood)))';
+            this.style.borderColor = 'hsl(var(--scarlet) / 0.5)';
+            this.style.color = 'white';
+            this.style.boxShadow = '0 0 24px hsl(var(--scarlet) / 0.6)';
+
+            // Update hidden input and title
+            chartTypeInput.value = chartType;
+            chartTitle.textContent = chartLabel;
+
+            // Generate chart
+            generateChart();
+        });
+    });
+
+    // Form submission
+    vizForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        generateChart();
+    });
+
+    // Initial load
+    generateChart();
+
+    // Initialize Lucide icons
+    setTimeout(() => {
+        lucide.createIcons();
+    }, 100);
+</script>
+{% endblock %}
+{% endblock %}

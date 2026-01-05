@@ -1,0 +1,381 @@
+{% extends 'eda/base_lovable.html' %}
+
+{% block title %}Upload Dataset - WANDA Analytics{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div style="text-align: center; margin-bottom: 4rem;">
+        <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">
+            <span class="gradient-text text-glow-strong">Manifest Your Data</span>
+        </h1>
+        <p
+            style="color: hsl(var(--muted-foreground)); font-size: 1.125rem; max-width: 42rem; margin: 0 auto; font-family: 'Inter', sans-serif;">
+            Channel the chaos magic of data transformation. Upload your dataset
+            and watch reality reshape around your insights.
+        </p>
+    </div>
+
+    <!-- Upload Zone -->
+    <div style="max-width: 48rem; margin: 0 auto;">
+        <div class="glass-card" style="padding: 4rem; text-align: center; cursor: pointer;" id="upload-card">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+
+                <!-- Drop Zone -->
+                <div id="drop-zone" style="position: relative;">
+                    <!-- Animated border -->
+                    <div id="animated-border"
+                        style="position: absolute; inset: -1rem; border-radius: var(--radius); opacity: 0; transition: opacity 0.5s;">
+                        <div
+                            style="position: absolute; inset: 0; border-radius: var(--radius); background: conic-gradient(from 0deg, transparent, hsl(348, 83%, 50%), transparent, hsl(280, 60%, 50%), transparent); padding: 2px; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask-composite: xor; animation: spin-slow 20s linear infinite;">
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div style="position: relative; z-index: 10;">
+                        <!-- Success State -->
+                        <div id="success-state" style="display: none;">
+                            <div
+                                style="width: 5rem; height: 5rem; margin: 0 auto 1.5rem; border-radius: 50%; background: hsl(120 100% 25% / 0.2); display: flex; align-items: center; justify-content: center; position: relative;">
+                                <i data-lucide="check"
+                                    style="width: 2.5rem; height: 2.5rem; color: hsl(120 60% 50%);"></i>
+                                <!-- Chaos tendrils -->
+                                <div
+                                    style="position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, hsl(120 100% 40% / 0.4), transparent 70%); filter: blur(20px); animation: tendril-float 8s ease-in-out infinite;">
+                                </div>
+                            </div>
+                            <div>
+                                <h3
+                                    style="font-family: 'Cinzel', serif; font-size: 1.5rem; color: hsl(var(--foreground)); margin-bottom: 0.5rem;">
+                                    Reality Manifested
+                                </h3>
+                                <p id="uploaded-filename"
+                                    style="color: hsl(var(--muted-foreground)); font-family: 'Inter', sans-serif;"></p>
+                            </div>
+                            <button type="button" class="magic-btn" style="margin-top: 1.5rem;" onclick="resetUpload()">
+                                Channel Another Dataset
+                            </button>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="loading-state" style="display: none; padding: 1rem 0;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                                <!-- Chaos Spinner -->
+                                <div style="position: relative; width: 5rem; height: 5rem;" id="chaos-spinner">
+                                    <!-- Outer chaos rings -->
+                                    <div
+                                        style="position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; border-top-color: hsl(348 83% 50% / 0.8); border-right-color: hsl(280 60% 50% / 0.4); animation: spin-slow 1s linear infinite;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; border-top-color: hsl(348 83% 60% / 0.6); border-right-color: hsl(280 60% 60% / 0.3); animation: spin-slow 1.3s linear infinite; transform: scale(0.85); filter: blur(1px);">
+                                    </div>
+                                    <div
+                                        style="position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; border-top-color: hsl(348 83% 70% / 0.4); border-right-color: hsl(280 60% 70% / 0.2); animation: spin-slow 1.6s linear infinite; transform: scale(0.7); filter: blur(2px);">
+                                    </div>
+                                    <!-- Core -->
+                                    <div
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1.5rem; height: 1.5rem; border-radius: 50%; background: radial-gradient(circle, hsl(348 100% 70%), hsl(348 83% 40%), hsl(280 60% 30%)); box-shadow: 0 0 20px hsl(348 100% 60%), 0 0 40px hsl(348 83% 50% / 0.5); animation: pulse-glow 1.5s ease-in-out infinite;">
+                                    </div>
+                                </div>
+                                <span
+                                    style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); font-family: 'Cinzel', serif; letter-spacing: 0.1em; animation: pulse 2s ease-in-out infinite;">Warping
+                                    Reality...</span>
+                            </div>
+                        </div>
+
+                        <!-- Default State -->
+                        <div id="default-state">
+                            <div id="upload-icon-container"
+                                style="width: 6rem; height: 6rem; margin: 0 auto 1.5rem; border-radius: 50%; background: linear-gradient(135deg, hsl(var(--scarlet-dark) / 0.3), hsl(var(--mystic-dark) / 0.3)); display: flex; align-items: center; justify-content: center; transition: all 0.5s; position: relative;">
+                                <i data-lucide="upload" id="upload-icon"
+                                    style="width: 2.5rem; height: 2.5rem; color: hsl(var(--scarlet)); transition: all 0.5s;"></i>
+                                <!-- Chaos tendrils -->
+                                <div
+                                    style="position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, hsl(var(--scarlet) / 0.4), transparent 70%); filter: blur(20px); animation: tendril-float 8s ease-in-out infinite;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 id="drop-title"
+                                    style="font-family: 'Cinzel', serif; font-size: 1.5rem; color: hsl(var(--foreground)); margin-bottom: 0.5rem;">
+                                    Drop Your Dataset
+                                </h3>
+                                <p style="color: hsl(var(--muted-foreground)); font-family: 'Inter', sans-serif;">
+                                    Drag & drop your CSV, Excel, or JSON files here
+                                </p>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.875rem; color: hsl(var(--muted-foreground));">
+                                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i data-lucide="file-up" style="width: 1rem; height: 1rem;"></i>
+                                    CSV
+                                </span>
+                                <span
+                                    style="width: 0.25rem; height: 0.25rem; border-radius: 50%; background: hsl(var(--muted-foreground));"></span>
+                                <span>XLSX</span>
+                                <span
+                                    style="width: 0.25rem; height: 0.25rem; border-radius: 50%; background: hsl(var(--muted-foreground));"></span>
+                                <span>JSON</span>
+                            </div>
+
+                            <div style="padding-top: 1rem;">
+                                <label>
+                                    <button type="button" class="magic-btn"
+                                        onclick="document.getElementById('id_file').click()">
+                                        Browse Files
+                                    </button>
+                                    {{ form.file }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dataset Name Input -->
+                <div style="margin-top: 2rem; display: none;" id="name-input-container">
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: hsl(var(--primary)); font-size: 0.875rem; font-weight: 700; font-family: 'Inter', sans-serif;">
+                        <i data-lucide="tag"
+                            style="width: 1rem; height: 1rem; display: inline-block; vertical-align: middle;"></i>
+                        DATASET IDENTIFIER
+                    </label>
+                    {{ form.name }}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="magic-btn" style="width: 100%; margin-top: 1.5rem; display: none;"
+                    id="submit-btn">
+                    <i data-lucide="rocket" style="width: 1rem; height: 1rem;"></i>
+                    <span>ENGAGE PROTOCOLS</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Recent Uploads -->
+        <div style="margin-top: 3rem;">
+            <h3
+                style="font-family: 'Cinzel', serif; font-size: 1.125rem; color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
+                Recent Manifestations
+            </h3>
+            <div style="display: grid; gap: 0.75rem;">
+                {% for manifest in recent_manifestations %}
+                <a href="{% url 'eda_report' manifest.id %}" class="glass-card manifest-card">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div
+                            style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: hsl(var(--scarlet-dark) / 0.3); display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="file-up"
+                                style="width: 1.25rem; height: 1.25rem; color: hsl(var(--scarlet));"></i>
+                        </div>
+                        <div>
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 0.875rem; color: hsl(var(--foreground)); margin: 0;">
+                                {{ manifest.name }}</p>
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin: 0;">
+                                {{ manifest.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                        style="width: 1rem; height: 1rem; color: hsl(var(--muted-foreground));"></i>
+                </a>
+                {% empty %}
+                <p
+                    style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; font-family: 'Inter', sans-serif; text-align: center; padding: 2rem; border: 1px dashed var(--glass-border); border-radius: var(--radius);">
+                    No recent manifestations detected.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_file {
+        display: none;
+    }
+
+    #id_name {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 0.375rem;
+        color: hsl(var(--foreground));
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s;
+    }
+
+    #id_name:focus {
+        outline: none;
+        border-color: hsl(var(--scarlet) / 0.5);
+        box-shadow: 0 0 0 1px hsl(var(--scarlet) / 0.5);
+        background: hsl(var(--scarlet) / 0.05);
+    }
+
+    .manifest-card {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        transition: all 0.3s;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .manifest-card:hover {
+        background: hsl(var(--scarlet-dark) / 0.1) !important;
+        transform: translateX(5px) !important;
+    }
+
+    @keyframes tendril-float {
+
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+            opacity: 0.5;
+        }
+
+        25% {
+            transform: translate(20px, -20px) scale(1.2);
+            opacity: 0.8;
+        }
+
+        50% {
+            transform: translate(-10px, 10px) scale(0.8);
+            opacity: 0.4;
+        }
+
+        75% {
+            transform: translate(15px, 15px) scale(1.1);
+            opacity: 0.7;
+        }
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('id_file');
+    const uploadForm = document.getElementById('upload-form');
+    const defaultState = document.getElementById('default-state');
+    const loadingState = document.getElementById('loading-state');
+    const successState = document.getElementById('success-state');
+    const submitBtn = document.getElementById('submit-btn');
+    const nameInputContainer = document.getElementById('name-input-container');
+    const animatedBorder = document.getElementById('animated-border');
+    const uploadIconContainer = document.getElementById('upload-icon-container');
+    const uploadIcon = document.getElementById('upload-icon');
+    const dropTitle = document.getElementById('drop-title');
+
+    let isDragging = false;
+
+    // Drag and drop handlers
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging = true;
+            animatedBorder.style.opacity = '1';
+            uploadIconContainer.style.transform = 'scale(1.1)';
+            uploadIcon.style.color = 'hsl(var(--scarlet-glow))';
+            uploadIcon.style.transform = 'scale(1.25)';
+            dropTitle.textContent = 'Release the Chaos';
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging = false;
+            animatedBorder.style.opacity = '0';
+            uploadIconContainer.style.transform = 'scale(1)';
+            uploadIcon.style.color = 'hsl(var(--scarlet))';
+            uploadIcon.style.transform = 'scale(1)';
+            dropTitle.textContent = 'Drop Your Dataset';
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+        if (fileInput.files && fileInput.files.length > 0) {
+            const fileName = fileInput.files[0].name;
+            document.getElementById('uploaded-filename').textContent = fileName;
+            nameInputContainer.style.display = 'block';
+            submitBtn.style.display = 'flex';
+        }
+    }
+
+    uploadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Please select a file to upload.');
+            return;
+        }
+
+        // Show loading state
+        defaultState.style.display = 'none';
+        loadingState.style.display = 'block';
+        submitBtn.style.display = 'none';
+        nameInputContainer.style.display = 'none';
+
+        // Create FormData and submit
+        const formData = new FormData(uploadForm);
+
+        fetch(uploadForm.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then(response => {
+                if (response.redirected) {
+                    // Success - redirect to report page
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.error) {
+                    alert('Upload failed: ' + data.error);
+                    resetUpload();
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Upload failed. Please try again.');
+                resetUpload();
+            });
+    });
+
+    function resetUpload() {
+        defaultState.style.display = 'block';
+        loadingState.style.display = 'none';
+        successState.style.display = 'none';
+        submitBtn.style.display = 'none';
+        nameInputContainer.style.display = 'none';
+        fileInput.value = '';
+        document.getElementById('id_name').value = '';
+    }
+
+    // Initialize Lucide icons after page load
+    setTimeout(() => {
+        lucide.createIcons();
+    }, 100);
+</script>
+{% endblock %}
+{% endblock %}
