@@ -31,6 +31,18 @@
                     <i class="fa-solid fa-chart-simple"></i>
                     Data Quality
                 </h3>
+
+                <!-- Health Score Display -->
+                <div class="health-score-container" style="margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 700;">
+                        DATASET
+                        HEALTH</div>
+                    <div
+                        style="font-size: 2.2rem; font-weight: 800; color: {% if health_score > 80 %}var(--success){% elif health_score > 50 %}var(--warning){% else %}var(--danger){% endif %}; text-shadow: 0 0 10px rgba(0,255,0,0.1);">
+                        {{ health_score }}<span style="font-size: 0.9rem; color: var(--text-muted);">/100</span>
+                    </div>
+                </div>
+
                 <div class="quality-stats">
                     <div class="stat-item">
                         <span class="stat-label">Total Rows</span>
@@ -40,6 +52,36 @@
                         <span class="stat-label">Columns</span>
                         <span class="stat-value">{{ column_info|length }}</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Smart Suggestions -->
+            <div class="smart-suggestions"
+                style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                <h3 class="section-title" style="font-size: 0.8rem; margin-bottom: 10px;">
+                    <i class="fa-solid fa-lightbulb" style="color: var(--primary);"></i>
+                    SMART RECOMMENDATIONS
+                </h3>
+                <div style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                    {% if suggestions %}
+                    {% for col, col_suggs in suggestions.items %}
+                    {% for sug in col_suggs %}
+                    <div
+                        style="background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px; border-left: 3px solid {% if sug.type == 'warning' %}var(--danger){% elif sug.type == 'suggestion' %}var(--accent){% else %}var(--info){% endif %};">
+                        <div
+                            style="font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">
+                            {{ col }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">{{ sug.message
+                            }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                    {% else %}
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">No critical issues
+                        found.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -346,11 +388,28 @@
                 </div>
 
                 <!-- History of recent operations -->
-                <div class="history-panel">
+                <div class="history-panel" style="margin-top: 20px;">
                     <div class="history-header">
-                        <span class="text-xs text-muted">Recent Cleaning Steps</span>
+                        <span class="text-xs text-muted"
+                            style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Version
+                            History</span>
                     </div>
-                    <div id="history-chips" class="history-chips"></div>
+                    <div id="history-chips" class="history-chips"
+                        style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 180px; overflow-y: auto;">
+                        {% for version in version_history %}
+                        <div class="version-chip"
+                            style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
+                            <span style="font-weight: 800; color: var(--primary);">V{{ version.version_number }}</span>
+                            <span
+                                style="color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin-left: 8px;">{{
+                                version.action_taken }}</span>
+                            <span style="font-size: 0.6rem; color: var(--text-muted);">{{ version.created_at|date:"H:i"
+                                }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted text-xs" style="font-style: italic;">No versions recorded yet.</div>
+                        {% endfor %}
+                    </div>
                 </div>
 
                 <!-- Terminal Log Widget -->
@@ -835,11 +894,49 @@
                 logToTerminal(`Success: ${action} completed. Rows: ${body.total_rows}`);
                 showToast("Operation successful", "success");
 
+                // Update Health Score
+                const healthScoreEl = document.querySelector('.health-score-container div[style*="font-size: 2.22rem"], .health-score-container div[style*="font-size: 2.2rem"]');
+                if (healthScoreEl && body.health_score !== undefined) {
+                    healthScoreEl.innerHTML = `${body.health_score}<span style="font-size: 0.9rem; color: var(--text-muted);">/100</span>`;
+                    if (body.health_score > 80) healthScoreEl.style.color = 'var(--success)';
+                    else if (body.health_score > 50) healthScoreEl.style.color = 'var(--warning)';
+                    else healthScoreEl.style.color = 'var(--danger)';
+                }
+
+                // Update Suggestions
+                const suggContainer = document.querySelector('.smart-suggestions div[style*="max-height: 200px"]');
+                if (suggContainer && body.suggestions) {
+                    let suggHtml = "";
+                    const suggs = body.suggestions;
+                    const keys = Object.keys(suggs);
+                    if (keys.length > 0) {
+                        keys.forEach(col => {
+                            suggs[col].forEach(sug => {
+                                const borderCol = sug.type === 'warning' ? 'var(--danger)' : (sug.type === 'suggestion' ? 'var(--accent)' : 'var(--info)');
+                                suggHtml += `<div style="background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px; border-left: 3px solid ${borderCol};">
+                                    <div style="font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">${col}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">${sug.message}</div>
+                                </div>`;
+                            });
+                        });
+                    } else {
+                        suggHtml = `<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">No critical issues found.</div>`;
+                    }
+                    suggContainer.innerHTML = suggHtml;
+                }
+
                 // Update history
                 const chipsContainer = document.getElementById('history-chips');
                 const chip = document.createElement('div');
-                chip.className = 'history-chip';
-                chip.innerHTML = `<i class="fa-solid fa-check"></i> ${action}: ${selectedColumn}`;
+                chip.className = 'version-chip';
+                chip.style = "background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-bottom: 6px;";
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                chip.innerHTML = `
+                    <span style="font-weight: 800; color: var(--primary);">V${body.current_version || '?'}</span>
+                    <span style="color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin-left: 8px;">${action} on ${selectedColumn}</span>
+                    <span style="font-size: 0.6rem; color: var(--text-muted);">${timeStr}</span>
+                `;
                 chipsContainer.prepend(chip);
 
                 // Update Stats

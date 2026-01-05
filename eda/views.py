@@ -23,6 +23,95 @@ def patched_asarray(a, dtype=None, order=None, **kwargs):
     return orig_asarray(a, dtype=dtype, order=order, **kwargs)
 np.asarray = patched_asarray
 
+
+def calculate_health_score(df):
+    """Calculate a data health score from 0-100."""
+    score = 100
+    total_cells = df.size
+    if total_cells == 0:
+        return 0
+    
+    # 1. Missing values (Deduct up to 30 points)
+    missing_pct = (df.isna().sum().sum() / total_cells) * 100
+    score -= min(30, missing_pct)
+    
+    # 2. Duplicate rows (Deduct up to 20 points)
+    dup_pct = (df.duplicated().sum() / len(df)) * 100 if len(df) > 0 else 0
+    score -= min(20, dup_pct * 2)
+    
+    # 3. Constant columns (Deduct 5 points each, up to 15)
+    constant_cols = [col for col in df.columns if df[col].nunique() <= 1]
+    score -= min(15, len(constant_cols) * 5)
+    
+    # 4. Outliers - basic IQR check for numeric (Deduct up to 15 points)
+    numeric_df = df.select_dtypes(include=['number'])
+    if not numeric_df.empty:
+        total_outliers = 0
+        for col in numeric_df.columns:
+            Q1 = numeric_df[col].quantile(0.25)
+            Q3 = numeric_df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            outliers = ((numeric_df[col] < (Q1 - 1.5 * IQR)) | (numeric_df[col] > (Q3 + 1.5 * IQR))).sum()
+            total_outliers += outliers
+        outlier_pct = (total_outliers / total_cells) * 100
+        score -= min(15, outlier_pct * 10)
+
+    return max(0, min(100, round(score)))
+
+
+def get_cleaning_suggestions(df):
+    """Generate rule-based cleaning suggestions for each column."""
+    suggestions = {}
+    for col in df.columns:
+        col_suggestions = []
+        missing_count = df[col].isna().sum()
+        missing_pct = (missing_count / len(df)) * 100
+        nunique = df[col].nunique()
+        dtype = str(df[col].dtype)
+        
+        # Rule: High missing values
+        if missing_pct > 50:
+            col_suggestions.append({
+                "type": "warning",
+                "message": f"High missingness ({missing_pct:.1f}%). Consider dropping.",
+                "action": "drop_column"
+            })
+        elif missing_count > 0:
+            if "float" in dtype or "int" in dtype:
+                col_suggestions.append({
+                    "type": "info",
+                    "message": "Numeric missing values. Suggest Mean/Median imputation.",
+                    "action": "fill_missing"
+                })
+            else:
+                col_suggestions.append({
+                    "type": "info",
+                    "message": "Categorical missing values. Suggest Mode imputation.",
+                    "action": "fill_missing"
+                })
+        
+        # Rule: Constant values
+        if nunique == 1:
+            col_suggestions.append({
+                "type": "warning",
+                "message": "Constant value column. Safe to remove.",
+                "action": "drop_column"
+            })
+        
+        # Rule: Categorical suggestions
+        if ("object" in dtype or "category" in dtype) and 1 < nunique < 15:
+             col_suggestions.append({
+                "type": "suggestion",
+                "message": f"Low cardinality ({nunique} unique). Good candidate for Label/One-Hot encoding.",
+                "action": "encode"
+            })
+             
+        if col_suggestions:
+            suggestions[col] = col_suggestions
+            
+    return suggestions
+
+
 def sample_dashboard(request):
     """View to render the sample dashboard UI."""
     # Mock data for the sample
@@ -193,12 +282,20 @@ def clean_data_view(request, file_id):
 
         MAX_ROWS = 10000
         display_df = df.head(MAX_ROWS)
+        
+        # Calculate health score and suggestions
+        health_score = calculate_health_score(df)
+        suggestions = get_cleaning_suggestions(df)
+        version_history = upload.versions.all()
 
         context = {
             "df": display_df.to_html(classes="table", index=False),
             "column_info": column_info,
             "file_id": file_id,
-            "total_rows": len(df)
+            "total_rows": len(df),
+            "health_score": health_score,
+            "suggestions": suggestions,
+            "version_history": version_history
         }
         return render(request, "eda/clean_data.html", context)
     except Exception as e:
@@ -285,9 +382,13 @@ def apply_cleaning_action(request):
             return JsonResponse({"error": "Invalid action", "success": False}, status=400)
 
         # Implementation of Versioning: Create a version before/after the change
-        # For simplicity, we'll store the state AFTER the cleaning action
         new_version_num = upload.current_version + 1
-        version_filename = f"version_{new_version_num}_{os.path.basename(upload.file.name)}"
+        
+        # Professional naming convention
+        action_slug = action.replace('_', '-')
+        col_slug = column.replace(' ', '-').lower() if column else 'dataset'
+        version_filename = f"v{new_version_num}_{action_slug}_{col_slug}.csv"
+        
         version_relative_path = os.path.join('uploads', 'versions', version_filename)
         version_absolute_path = os.path.join(os.path.dirname(upload.file.path), 'versions', version_filename)
         
@@ -320,6 +421,9 @@ def apply_cleaning_action(request):
             "table_html": df.head(10000).to_html(classes="table", index=False),
             "column_info": column_info,
             "total_rows": len(df),
+            "health_score": calculate_health_score(df),
+            "suggestions": get_cleaning_suggestions(df),
+            "current_version": upload.current_version,
             "success": True
         })
 
@@ -469,40 +573,27 @@ def ask_ai(request, file_id):
             df.info(buf=buffer)
             info_str = buffer.getvalue()
             
-            context = f"""
-            You are a senior data scientist. Here is information about the dataset the user is asking about:
-            
-            File Name: {upload.name}
-            Columns: {', '.join(df.columns)}
+            # System context
+            system_prompt = f"""You are a senior data scientist. Focus on accuracy and brevity.
+            Dataset Info:
+            File: {upload.name}
+            Columns: {list(df.columns)}
             Shape: {df.shape}
-            
-            Data Info:
-            {info_str}
-            
-            First 5 rows:
-            {df.head().to_string()}
-            
-            Statistical Summary:
-            {df.describe().to_string()}
-            
-            User Question: {user_question}
-            
-            Write a short, simple answer as plain bullet points only. Follow these rules:
-            - No headings, no emojis, no numbered sections.
-            - 1-2 bullet points maximum.
-            - Each bullet should be one clear, concise sentence.
-            - Focus only on what is relevant to the user's question.
-            - Do NOT include raw pandas output or long tables, just summarize.
-            - Do NOT start with phrases like "Based on the information provided".
+            Stats: {df.describe().to_string()}
             """
+
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # Add historical context (last 5 messages)
+            recent_history = upload.chat_history.all().order_by('-created_at')[:5]
+            for msg in reversed(recent_history):
+                messages.append({"role": "user" if msg.role == 'user' else "assistant", "content": msg.content})
+
+            # Add the current question
+            messages.append({"role": "user", "content": f"Context summary: {info_str}\n\nQuestion: {user_question}"})
             
             chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": context,
-                    }
-                ],
+                messages=messages,
                 model="llama-3.1-8b-instant",
             )
             

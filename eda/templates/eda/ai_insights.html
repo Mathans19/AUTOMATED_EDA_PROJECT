@@ -60,6 +60,22 @@
             {% endfor %}
         </div>
 
+        <!-- AI Quick Actions -->
+        <div class="ai-quick-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
+                onclick="quickAction('Explain this dataset like I’m non-technical')">
+                <i class="fa-solid fa-user-graduate"></i> Non-Technical Explain
+            </button>
+            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
+                onclick="quickAction('Summarize the main issues with this dataset in one short sentence')">
+                <i class="fa-solid fa-bolt"></i> One-Line Summary
+            </button>
+            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
+                onclick="quickAction('Analyze the dataset and provide a recommended cleaning plan with specific steps')">
+                <i class="fa-solid fa-list-check"></i> Cleaning Plan
+            </button>
+        </div>
+
         <!-- Input Area -->
         <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" style="display: flex; gap: 1rem;">
             {% csrf_token %}
@@ -128,6 +144,11 @@
 <script>
     var AI_URL = "{% url 'ask_ai' file_id=file_id %}";
     var chatBox = document.getElementById("chat-box");
+
+    function quickAction(text) {
+        document.getElementById("user_input").value = text;
+        sendMessage();
+    }
 
     function appendMessage(text, type) {
         const msgDiv = document.createElement("div");
