@@ -1,0 +1,731 @@
+{% extends 'eda/base.html' %}
+
+{% block title %}Data Cleaning - Automated Insights{% endblock %}
+
+{% block content %}
+<div class="cleaning-workspace">
+    <div class="workspace-grid">
+        <!-- Sidebar: Tools & Stats -->
+        <aside class="workspace-sidebar">
+            <div class="glass-card panel-header-card stark-card">
+                <div class="panel-header">
+                    <div class="header-main">
+                        <div class="header-icon-box" style="background: var(--iron-red); color: white;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h2 class="wanda-text">S.H.I.E.L.D. HUB</h2>
+                            <p class="text-secondary text-xs">Integrity Protocol v{{ current_version|default:1 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="health-summary">
+                    <div class="health-metric">
+                        <span class="metric-label">Dataset Integrity</span>
+                        <span class="metric-value wanda-text" id="health-score-val">{{ health_score }}</span>
+                    </div>
+                    <div class="progress-rail" style="height: 6px; background: rgba(255,255,255,0.05);">
+                        <div id="health-score-bar" class="progress-fill"
+                            style="background: var(--primary); box-shadow: 0 0 10px var(--primary);"
+                            data-health="{{ health_score|default:0 }}">
+                        </div>
+                    </div>
+                    <div class="metric-group">
+                        <div class="mini-metric">
+                            <span class="text-xs text-muted">Records</span>
+                            <span id="total-rows-val" class="text-sm font-600">{{ total_rows }}</span>
+                        </div>
+                        <div class="mini-metric">
+                            <span class="text-xs text-muted">Features</span>
+                            <span id="total-cols-val" class="text-sm font-600">{{ column_info|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="glass-card section-card holo-plate">
+                <h3 class="wanda-text"><i class="fa-solid fa-wand-sparkles"></i> Stark Intel</h3>
+                <div class="suggestion-stack" id="suggestions-box">
+                    {% for col, col_suggs in suggestions.items %}
+                    {% for sugg in col_suggs %}
+                    <div class="suggestion-item severity-{{ sugg.severity }}"
+                        onclick="applySuggestion('{{ col }}', '{{ sugg.action }}')"
+                        style="border-left: 3px solid var(--accent);">
+                        <div class="sugg-header">
+                            <span class="sugg-col" style="color: var(--accent);">{{ col }}</span>
+                            <span class="sugg-badge" style="background: var(--iron-red);">{{ sugg.severity }}</span>
+                        </div>
+                        <p class="sugg-msg">{{ sugg.reason }}</p>
+                        <div class="sugg-footer">
+                            <span>Auto-deploy available</span>
+                            <i class="fa-solid fa-bolt-lightning"></i>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% empty %}
+                    <div class="empty-state">System secure. No anomalies detected.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Operations Form -->
+            <div class="glass-card section-card stark-card">
+                <h3 class="wanda-text"><i class="fa-solid fa-screwdriver-wrench"></i> Refinement</h3>
+                <form id="cleaningForm" onsubmit="event.preventDefault(); updateTable(event.submitter);">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label class="text-xs font-600 uppercase">Input Column</label>
+                        <select id="column" name="column" class="form-select stark-card" style="background: #000;">
+                            {% for col, _, _ in column_info %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="ops-accordion">
+                        <div class="op-group">
+                            <button type="button" class="op-toggle"
+                                onclick="this.nextElementSibling.classList.toggle('hidden')">
+                                Structural Mods <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="op-options">
+                                <label class="op-row">
+                                    <input type="radio" name="action" value="drop_column">
+                                    <span class="op-label"><i class="fa-solid fa-trash-can"></i> Deconstruct</span>
+                                    <button type="submit" class="btn btn-primary thor-btn op-btn">Deploy</button>
+                                </label>
+                                <label class="op-row">
+                                    <input type="radio" name="action" value="rename_column">
+                                    <span class="op-label"><i class="fa-solid fa-pen"></i> Rebrand</span>
+                                    <div class="op-input-box">
+                                        <input type="text" name="new_name" placeholder="Alias..." class="mini-input">
+                                        <button type="submit" class="btn btn-primary thor-btn op-btn">Deploy</button>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="op-group">
+                            <button type="button" class="op-toggle"
+                                onclick="this.nextElementSibling.classList.toggle('hidden')">
+                                Quality Override <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="op-options hidden">
+                                <label class="op-row">
+                                    <input type="radio" name="action" value="drop_na">
+                                    <span class="op-label">Purge Nulls</span>
+                                    <button type="submit" class="btn btn-primary hulk-btn op-btn">SMASH</button>
+                                </label>
+                                <label class="op-row">
+                                    <input type="radio" name="action" value="remove_duplicates">
+                                    <span class="op-label">Kill Dups</span>
+                                    <button type="submit" class="btn btn-primary widow-btn op-btn"
+                                        style="background: #000; border: 1px solid var(--iron-red); color: white;">Execute</button>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-footer">
+                        <button type="button" id="undo-btn" class="btn btn-secondary w-full" onclick="undoAction()" {%
+                            if current_version <=1 %}disabled{% endif %} style="border-color: var(--accent);">
+                            <i class="fa-solid fa-rotate-left"></i> ROLLBACK (v<span id="version-num">{{
+                                current_version|default:1 }}</span>)
+                        </button>
+                        <a href="{% url 'download_cleaned_data' file_id=file_id %}"
+                            class="btn btn-ghost w-full thor-btn" style="margin-top: 10px;">
+                            <i class="fa-solid fa-download"></i> Extract CSV
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Log -->
+            <div class="terminal-log holo-plate" id="clean-terminal" style="border-top: 2px solid var(--primary);">
+                <div class="log-line">S.H.I.E.L.D. Secure Uplink established...</div>
+            </div>
+        </aside>
+
+        <!-- Main: Data View -->
+        <main class="workspace-main">
+            <div class="glass-card preview-card holo-plate">
+                <div class="preview-header">
+                    <div class="header-left">
+                        <h3 class="wanda-text">Uplink Feed</h3>
+                        <span class="version-label" style="background: var(--iron-red); color: white;">PV-{{
+                            current_version|default:1 }}</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="text-muted text-xs"><i class="fa-solid fa-database"></i> <span
+                                id="rows-count-meta">{{ total_rows }}</span> DATASET_STREAM_ACTIVE</span>
+                    </div>
+                </div>
+
+                <div id="table-container" class="table-scroll" style="border: 1px solid var(--primary);">
+                    {{ df|safe }}
+                </div>
+
+                <div id="table-skeleton" class="hidden">
+                    <div class="shimmer-row"></div>
+                    <div class="shimmer-row"></div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="fab-action">
+                <button class="btn btn-primary thor-btn fab-trigger"
+                    style="width: 60px; height: 60px; border-radius: 50%;"
+                    onclick="showToast('Initializing JARVIS Auto-fix...', 'info')">
+                    <i class="fa-solid fa-robot" style="font-size: 24px;"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    .cleaning-workspace {
+        min-height: calc(100vh - 120px);
+    }
+
+    .workspace-grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: var(--space-32);
+        align-items: start;
+    }
+
+    .workspace-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-24);
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--space-24);
+    }
+
+    .header-main {
+        display: flex;
+        gap: 12px;
+    }
+
+    .header-icon-box {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-muted);
+        color: var(--primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .header-main h2 {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .system-status {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--success);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    /* Health */
+    .health-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .health-metric {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .metric-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .metric-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Outfit';
+    }
+
+    .metric-group {
+        display: flex;
+        gap: 24px;
+        margin-top: 4px;
+    }
+
+    .mini-metric {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Suggestions */
+    .suggestion-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .suggestion-item {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--glass-border);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .suggestion-item:hover {
+        border-color: var(--primary);
+        background: rgba(0, 229, 255, 0.03);
+    }
+
+    .sugg-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .sugg-col {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .sugg-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: var(--glass-border);
+        text-transform: uppercase;
+    }
+
+    .sugg-msg {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+
+    .sugg-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* Operations Form */
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .form-select {
+        background: var(--bg-primary);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .ops-accordion {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .op-toggle {
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .op-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px;
+    }
+
+    .op-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .op-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .op-row input {
+        display: none;
+    }
+
+    .op-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .op-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: var(--primary);
+        color: var(--bg-primary);
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .op-row input:checked+.op-label {
+        color: var(--primary);
+    }
+
+    .op-row input:checked~.op-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .op-input-box {
+        display: none;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .op-row input:checked~.op-input-box {
+        display: flex;
+    }
+
+    .mini-input {
+        width: 80px;
+        background: var(--bg-primary);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        font-size: 11px;
+        padding: 4px;
+        border-radius: 4px;
+    }
+
+    .action-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Table Preview */
+    .preview-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 80vh;
+        overflow: hidden;
+    }
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 12px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .version-label {
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: var(--primary-muted);
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .table-scroll {
+        flex: 1;
+        overflow: auto;
+        background: var(--bg-primary);
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+    }
+
+    /* Terminal */
+    .terminal-log {
+        background: #000;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 11px;
+        color: #fff;
+        opacity: 0.7;
+        height: 100px;
+        overflow-y: auto;
+    }
+
+    .log-line {
+        margin-bottom: 4px;
+        color: #888;
+    }
+
+    .log-line::before {
+        content: '➜ ';
+        color: var(--primary);
+    }
+
+    /* Fab */
+    .fab-action {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        z-index: 100;
+    }
+
+    .fab-trigger {
+        border: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 8px 32px rgba(0, 229, 255, 0.3);
+        overflow: hidden;
+    }
+
+    .fab-trigger i {
+        font-size: 18px;
+    }
+
+    .fab-trigger span {
+        display: none;
+        margin-left: 8px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .fab-trigger:hover {
+        width: 120px;
+        border-radius: 24px;
+    }
+
+    .fab-trigger:hover span {
+        display: inline;
+    }
+
+    @media (max-width: 1200px) {
+        .workspace-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .workspace-sidebar {
+            position: static;
+            max-height: none;
+        }
+    }
+</style>
+
+<style>
+    .cleaning-workspace {
+        padding-top: 0;
+    }
+</style>
+
+<script>
+    const FILE_ID = parseInt("{{ file_id }}", 10);
+    const UNDO_CLEANING_URL = "{% url 'undo_cleaning' file_id=file_id %}";
+
+    // System logging helper
+    function sysLog(msg, type = 'info') {
+        const term = document.getElementById('clean-terminal');
+        if (!term) return;
+        const line = document.createElement('div');
+        line.className = `log-line log-${type}`;
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        term.prepend(line);
+        while (term.children.length > 20) term.lastChild.remove();
+    }
+
+    // Initialize Health Bar on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const bar = document.getElementById('health-score-bar');
+        if (bar) bar.style.width = (bar.dataset.health || 0) + '%';
+        sysLog('System Initialized. Ready for operations.');
+    });
+
+    function applySuggestion(column, action) {
+        const sel = document.getElementById('column');
+        if (sel) sel.value = column;
+        const radio = document.querySelector(`input[name="action"][value="${action}"]`);
+        if (radio) {
+            radio.checked = true;
+            const opt = radio.closest('.op-options');
+            if (opt) opt.classList.remove('hidden');
+            sysLog(`AI Recommendation: Prepared ${action} on ${column}`);
+            showToast(`Ready to apply ${action.replace('_', ' ')}`, 'info');
+        }
+    }
+
+    async function updateTable(btn) {
+        const form = document.getElementById('cleaningForm');
+        const formData = new FormData(form);
+        const submitBtn = btn || form.querySelector('button[type="submit"]');
+
+        if (!formData.get('action')) {
+            showToast("Please select an operation", "warning");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        const origText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+
+        const skel = document.getElementById('table-skeleton');
+        const cont = document.getElementById('table-container');
+        if (skel) skel.classList.remove('hidden');
+        if (cont) cont.style.opacity = '0.5';
+
+        sysLog(`Applying ${formData.get('action')} to ${formData.get('column')}...`);
+
+        try {
+            const res = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                // Update Numeric Stats
+                document.getElementById('health-score-val').textContent = data.health_score;
+                const hBar = document.getElementById('health-score-bar');
+                if (hBar) {
+                    hBar.dataset.health = data.health_score;
+                    hBar.style.width = data.health_score + '%';
+                }
+                document.getElementById('total-rows-val').textContent = data.total_rows;
+                document.getElementById('rows-count-meta').textContent = data.total_rows;
+
+                // Update Table View
+                if (cont) cont.innerHTML = data.df_html;
+
+                // Update Versioning
+                const undoBtn = document.getElementById('undo-btn');
+                if (undoBtn) undoBtn.disabled = false;
+                document.getElementById('version-num').textContent = data.current_version;
+                document.getElementById('version-badge').textContent = data.current_version;
+
+                sysLog(`Successfully applied ${formData.get('action')}`, 'success');
+                showToast('Operation Successful', 'success');
+            } else {
+                sysLog(`Operation Failed: ${data.message}`, 'error');
+                showToast(data.message, 'error');
+            }
+        } catch (e) {
+            sysLog('Network transmission error', 'error');
+            showToast('Communication failed', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origText;
+            if (skel) skel.classList.add('hidden');
+            if (cont) cont.style.opacity = '1';
+        }
+    }
+
+    async function undoAction() {
+        const btn = document.getElementById('undo-btn');
+        if (!btn) return;
+        btn.disabled = true;
+        sysLog('Initiating rollback sequence...', 'warning');
+        try {
+            const res = await fetch(UNDO_CLEANING_URL, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                sysLog('Rollback successful. Reloading state...', 'success');
+                location.reload();
+            } else {
+                showToast(data.message, 'error');
+                btn.disabled = false;
+            }
+        } catch (e) {
+            showToast('Rollback request failed', 'error');
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

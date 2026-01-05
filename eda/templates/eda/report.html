@@ -1,0 +1,416 @@
+{% extends 'eda/base.html' %}
+{% load eda_filters %}
+
+{% block title %}EDA Report - Automated Insights{% endblock %}
+
+{% block content %}
+<div class="report-workspace">
+    <!-- Header -->
+    <header class="report-header">
+        <div class="header-left">
+            <h1 class="wanda-text">TACTICAL DASHBOARD</h1>
+            <p class="text-secondary">Project Insight: Dataset structural analysis & integrity check.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'clean_data' file_id=file_id %}" class="btn btn-secondary stark-link">
+                <i class="fa-solid fa-vial-virus"></i>
+                <span>Refine Core</span>
+            </a>
+            <a href="{% url 'visualize_data' file_id=file_id %}" class="btn btn-primary thor-btn">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Invoke JARVIS</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="report-grid">
+        <!-- Main Content -->
+        <div class="report-main">
+            <!-- Key Metrics -->
+            <section class="report-section glass-card holo-plate stark-card">
+                <h3 class="wanda-text"><i class="fa-solid fa-gauge-high"></i> CORE POWER LEVELS</h3>
+                <div class="metrics-grid">
+                    <div class="metric-item" style="border-color: var(--primary);">
+                        <span class="metric-label">Node Count</span>
+                        <span class="metric-value">{{ dataset_info.total_rows|floatformat:0 }}</span>
+                    </div>
+                    <div class="metric-item" style="border-color: var(--primary);">
+                        <span class="metric-label">Signal Channels</span>
+                        <span class="metric-value">{{ dataset_info.total_columns }}</span>
+                    </div>
+                    <div class="metric-item" style="border-color: var(--secondary);">
+                        <span class="metric-label">Signal Noise</span>
+                        <span class="metric-value">{{ dataset_info.total_missing }}</span>
+                        <span class="metric-meta">{{ dataset_info.missing_percentage|floatformat:1 }}%</span>
+                    </div>
+                    <div class="metric-item" style="border-color: var(--accent);">
+                        <span class="metric-label">Redundancy</span>
+                        <span class="metric-value">{{ dataset_info.duplicate_rows }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Column Inventory -->
+            <section class="report-section glass-card holo-plate">
+                <h3 class="wanda-text"><i class="fa-solid fa-table-list"></i> SIGNAL MANIFEST</h3>
+                <div class="table-container" style="border-color: var(--primary);">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>IDENTIFIER</th>
+                                <th>TYPE</th>
+                                <th>NOISE</th>
+                                <th>UNIQUENESS</th>
+                                <th>RANGE (MIN - MAX)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col in column_info %}
+                            <tr>
+                                <td style="font-weight: 700; color: var(--primary);">{{ col.name }}</td>
+                                <td><span class="type-badge" style="background: var(--iron-red); color: white;">{{
+                                        col.dtype }}</span></td>
+                                <td>
+                                    <span
+                                        class="{% if col.missing_count > 0 %}text-warning{% else %}text-muted{% endif %}">
+                                        {{ col.missing_count }} ({{ col.missing_percentage|floatformat:1 }}%)
+                                    </span>
+                                </td>
+                                <td>{{ col.unique_count }}</td>
+                                <td class="text-sm">
+                                    {% if col.min is not None %}
+                                    {{ col.min|floatformat:2 }} &mdash; {{ col.max|floatformat:2 }}
+                                    {% else %}&mdash;{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Correlation -->
+            {% if correlation_matrix and numeric_cols|length > 1 %}
+            <section class="report-section glass-card holo-plate stark-card">
+                <h3 class="wanda-text"><i class="fa-solid fa-circle-nodes"></i> LINKAGE ANALYSIS</h3>
+                <div id="correlation-chart" style="width: 100%; min-height: 400px; padding: var(--space-16);"></div>
+            </section>
+            {% endif %}
+
+            <!-- Data Preview -->
+            <section class="report-section glass-card holo-plate">
+                <h3 class="wanda-text"><i class="fa-solid fa-list-check"></i> RAW DATA STREAM</h3>
+                <div class="table-container" style="border-color: var(--primary);">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                {% for col in column_info|slice:":8" %}
+                                <th>{{ col.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in sample_data %}
+                            <tr>
+                                {% for col in column_info|slice:":8" %}
+                                <td class="text-sm">{{ row|get_item:col.name|default:"-" }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="report-sidebar">
+            <div class="glass-card stark-card">
+                <h3 class="wanda-text"><i class="fa-solid fa-clock-rotate-left"></i> LOG HISTORY</h3>
+                <div class="history-timeline">
+                    {% for v in versions %}
+                    <div class="history-item {% if v.version_number == current_version %}active{% endif %}">
+                        <div class="history-marker" style="border-color: var(--primary);"></div>
+                        <div class="history-info">
+                            <span class="version-num" style="color: var(--accent);">PROTOCOL v{{ v.version_number
+                                }}</span>
+                            <span class="version-desc">{{ v.action_taken }}</span>
+                            <span class="version-date">{{ v.created_at|timesince }} ago</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if alerts %}
+            <div class="glass-card holo-plate" style="margin-top: var(--space-24); border-color: var(--secondary);">
+                <h3 class="wanda-text"><i class="fa-solid fa-circle-exclamation"></i> DEPLOYMENT ALERTS</h3>
+                <div class="alerts-list">
+                    {% for alert in alerts %}
+                    <div class="alert-box alert-{{ alert.type }}"
+                        style="background: rgba(230,33,23,0.1); border-left: 3px solid var(--secondary);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>{{ alert.message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+
+<style>
+    .report-workspace {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-32);
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: var(--space-12);
+    }
+
+    .report-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: var(--space-32);
+        align-items: start;
+    }
+
+    .report-main {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-32);
+    }
+
+    .report-section h3 {
+        margin-bottom: var(--space-24);
+        color: var(--text-primary);
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .report-section h3 i {
+        color: var(--primary);
+        font-size: 14px;
+    }
+
+    /* Metrics */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-16);
+    }
+
+    .metric-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: var(--space-16);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 6px;
+        border: 1px solid var(--glass-border);
+    }
+
+    .metric-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .metric-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .metric-meta {
+        font-size: 12px;
+        color: var(--danger);
+        font-weight: 600;
+    }
+
+    /* Badges */
+    .type-badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--primary-muted);
+        color: var(--primary);
+        text-transform: uppercase;
+    }
+
+    /* Sidebar / Timeline */
+    .history-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-24);
+        position: relative;
+        padding-left: 14px;
+    }
+
+    .history-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--glass-border);
+    }
+
+    .history-item {
+        position: relative;
+        display: flex;
+        gap: 16px;
+    }
+
+    .history-marker {
+        position: absolute;
+        left: -18px;
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--bg-surface);
+        border: 2px solid var(--glass-border);
+        transition: var(--transition);
+    }
+
+    .history-item.active .history-marker {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 8px var(--primary);
+    }
+
+    .history-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .version-num {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .version-desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .version-date {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    /* Alerts */
+    .alerts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .alert-box {
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        line-height: 1.4;
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .text-sm {
+        font-size: 13px;
+    }
+
+    .text-warning {
+        color: var(--warning);
+    }
+
+    .text-success {
+        color: var(--success);
+    }
+
+    @media (max-width: 1024px) {
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metrics-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+{% if correlation_matrix and numeric_cols|length > 1 %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Generate correlation heatmap
+    const numericCols = JSON.parse('{{ numeric_cols|escapejs }}');
+    const corrData = JSON.parse('{{ correlation_matrix|escapejs }}');
+
+    const corrValues = [];
+    for (let i = 0; i < numericCols.length; i++) {
+        const row = [];
+        for (let j = 0; j < numericCols.length; j++) {
+            const col1 = String(numericCols[i]);
+            const col2 = String(numericCols[j]);
+            row.push(corrData[col1] && corrData[col1][col2] !== undefined ? corrData[col1][col2] : 0);
+        }
+        corrValues.push(row);
+    }
+
+    const trace = {
+        z: corrValues,
+        x: numericCols,
+        y: numericCols,
+        type: 'heatmap',
+        colorscale: 'RdBu',
+        zmid: 0,
+        text: corrValues.map(row => row.map(v => v.toFixed(2))),
+        texttemplate: '%{text}',
+        textfont: { size: 10 },
+        hovertemplate: '%{x} vs %{y}<br>Correlation: %{z:.3f}<extra></extra>'
+    };
+
+    const layout = {
+        title: 'Correlation Matrix',
+        width: 800,
+        height: 600,
+        margin: { l: 150, r: 50, t: 50, b: 150 }
+    };
+
+    Plotly.newPlot('correlation-chart', [trace], layout, { responsive: true });
+</script>
+{% endif %}
+{% endblock %}

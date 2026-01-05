@@ -1,0 +1,181 @@
+{% extends 'eda/base.html' %}
+
+{% block title %}INITIATE UPLINK - Avengers Data Hub{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-card glass-card holo-plate stark-card"
+        style="max-width: 600px; margin: 40px auto; padding: 40px;">
+        <div class="upload-header" style="text-align: center; margin-bottom: 30px;">
+            <div class="shield-logo" style="font-size: 50px; color: var(--primary); margin-bottom: 20px;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="wanda-text">INBOUND UPLINK CMD</h1>
+            <p class="text-secondary">Deploy dataset for tactical analysis & refinement.</p>
+        </div>
+
+        <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
+            {% csrf_token %}
+            <div id="drop-zone" class="drop-zone holo-plate"
+                style="border: 2px dashed var(--primary); padding: 60px 20px; transition: 0.3s; border-radius: 12px; cursor: pointer; text-align: center;">
+                <input type="file" name="file" id="fileInput" accept=".csv" hidden>
+                <div class="drop-content">
+                    <div class="upload-icon-box" style="font-size: 40px; color: var(--accent); margin-bottom: 15px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="wanda-text">DROP COMMAND MODULE</h3>
+                    <p>Transmit CSV data stream directly or <span class="browse-btn"
+                            style="color: var(--primary); font-weight: 700;">Open Comms</span></p>
+                    <span class="file-limit" style="font-size: 11px; color: var(--text-muted);">Protocol Limit:
+                        50MB</span>
+                </div>
+
+                <!-- Progress State -->
+                <div id="upload-progress" class="upload-progress hidden" style="margin-top: 20px;">
+                    <div class="spinner-box">
+                        <i class="fa-solid fa-atom fa-spin" style="font-size: 30px; color: var(--primary);"></i>
+                    </div>
+                    <div class="progress-info" style="margin-top: 15px;">
+                        <span id="progress-text">Securing Data Stream...</span>
+                        <div class="progress-bar-container"
+                            style="height: 4px; background: rgba(255,255,255,0.05); margin-top: 10px; border-radius: 2px;">
+                            <div id="progress-bar" class="progress-bar"
+                                style="height: 100%; background: var(--primary); width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected File State -->
+                <div id="file-ready" class="file-ready hidden" style="margin-top: 20px;">
+                    <i class="fa-solid fa-file-csv selected-icon" style="font-size: 40px; color: var(--success);"></i>
+                    <div class="ready-info" style="margin-top: 10px;">
+                        <span id="file-name" class="wanda-text">Unknown.csv</span>
+                        <span id="file-size" class="text-xs"
+                            style="display: block; font-size: 12px; color: var(--text-muted);">0 KB</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="resetUpload()"
+                        style="margin-top: 10px; padding: 5px 15px; font-size: 12px;">RESET</button>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 30px;">
+                <button type="submit" id="submitBtn" class="btn btn-primary thor-btn w-full btn-lg" disabled>
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                    <span>FINALIZE DEPLOYMENT</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="upload-features"
+            style="display: flex; justify-content: space-around; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--glass-border);">
+            <div class="u-feature" style="text-align: center; font-size: 12px;">
+                <i class="fa-solid fa-lock"
+                    style="display: block; font-size: 20px; color: var(--accent); margin-bottom: 5px;"></i>
+                <span>Stark Encrypted</span>
+            </div>
+            <div class="u-feature" style="text-align: center; font-size: 12px;">
+                <i class="fa-solid fa-microchip"
+                    style="display: block; font-size: 20px; color: var(--primary); margin-bottom: 5px;"></i>
+                <span>Auto-Parse Core</span>
+            </div>
+            <div class="u-feature" style="text-align: center; font-size: 12px;">
+                <i class="fa-solid fa-shield-virus"
+                    style="display: block; font-size: 20px; color: var(--success); margin-bottom: 5px;"></i>
+                <span>SHIELD Scanned</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('drop-zone');
+    const submitBtn = document.getElementById('submitBtn');
+    const dropContent = dropZone.querySelector('.drop-content');
+    const fileReady = document.getElementById('file-ready');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const progressArea = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    dropZone.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    };
+
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = 'rgba(0,229,255,0.05)'; };
+    dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.style.background = 'transparent'; };
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.background = 'transparent';
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            handleFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    function handleFile(file) {
+        if (!file.name.endsWith('.csv')) {
+            showToast('S.H.I.E.L.D. Protocol Error: Only .CSV streams accepted', 'error');
+            return;
+        }
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        dropContent.classList.add('hidden');
+        fileReady.classList.remove('hidden');
+        submitBtn.disabled = false;
+        showToast('Module detected. Ready for uplink.', 'info');
+    }
+
+    function resetUpload() {
+        fileInput.value = '';
+        dropContent.classList.remove('hidden');
+        fileReady.classList.add('hidden');
+        submitBtn.disabled = true;
+    }
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        submitBtn.disabled = true;
+        fileReady.classList.add('hidden');
+        progressArea.classList.remove('hidden');
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.href, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.onprogress = (ev) => {
+                if (ev.lengthComputable) {
+                    const pct = (ev.loaded / ev.total) * 100;
+                    progressBar.style.width = pct + '%';
+                    progressText.textContent = `Transmitting: ${Math.round(pct)}%`;
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    showToast('Uplink Complete. Redirecting to JARVIS...', 'success');
+                    window.location.reload();
+                } else {
+                    showToast('Transmission Failed: Shield Override Detected', 'error');
+                    resetUpload();
+                    progressArea.classList.add('hidden');
+                }
+            };
+
+            xhr.send(formData);
+        } catch (err) {
+            showToast('Signal Interference: Network error', 'error');
+            resetUpload();
+            progressArea.classList.add('hidden');
+        }
+    };
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,8 @@
+Name,Age,Score,City,Date
+Alice,25,85,New York,2023-01-01
+Bob,30,90,Los Angeles,2023-01-02
+Charlie,,78,Chicago,2023-01-03
+David,35,92,New York,2023-01-04
+Eve,28,,Los Angeles,2023-01-05
+Alice,25,85,New York,2023-01-01
+Frank,40,88,,2023-01-07

@@ -1,0 +1,222 @@
+{% extends 'eda/base.html' %}
+
+{% block title %}AI Insights - Automated Insights{% endblock %}
+
+{% block content %}
+<div class="app-container" style="padding-top: 0;">
+    <div class="glass-card holo-plate stark-card"
+        style="max-width: 1000px; margin: 0 auto; min-height: 85vh; display: flex; flex-direction: column; border-top: 3px solid var(--primary);">
+
+        <!-- Header -->
+        <div class="text-center mb-4" style="padding: 20px;">
+            <div style="
+                width: 70px; height: 70px; 
+                background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+                border-radius: 50%; 
+                display:flex; align-items:center; justify-content:center; 
+                margin: 0 auto 1.5rem auto;
+                box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+                border: 2px solid white;
+            ">
+                <i class="fa-solid fa-brain"
+                    style="font-size: 2rem; color: white; filter: drop-shadow(0 0 5px white);"></i>
+            </div>
+            <h1 class="wanda-text" style="font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px;">JARVIS
+                ORACLE</h1>
+            <p
+                style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 1.5rem auto; font-size: 0.9rem; letter-spacing: 0.5px;">
+                Advanced tactical analysis interface. Direct uplink to the Strategic Analytics Core.
+            </p>
+            <button onclick="generateCleaningPlan()" class="btn btn-primary thor-btn pulse-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>DEPLOY STRATEGIC REFINEMENT PLAN</span>
+            </button>
+        </div>
+
+        <!-- Chat Container -->
+        <div id="chat-box" class="holo-plate" style="
+            flex: 1; 
+            background: rgba(0,0,0,0.4); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; 
+            padding: 2rem; 
+            margin: 0 20px 1.5rem 20px; 
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 400px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        ">
+            <!-- Welcome Message -->
+            <div class="message system">
+                <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+                <div class="bubble">
+                    Hello! I've analyzed your dataset. Ask me about trends, correlations, or specific columns.
+                </div>
+            </div>
+
+            <!-- Chat history will be appended here -->
+            {% for msg in chat_history %}
+            <div class="message {% if msg.role == 'user' %}user{% else %}system{% endif %}">
+                <div class="avatar"><i
+                        class="fa-solid fa-{% if msg.role == 'user' %}user{% else %}robot{% endif %}"></i></div>
+                <div class="bubble">{{ msg.content|linebreaksbr }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Input Area -->
+        <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" style="display: flex; gap: 1rem;">
+            {% csrf_token %}
+            <input type="text" id="user_input"
+                placeholder="e.g., 'What is the average age?' or 'Show me the correlation between X and Y'"
+                autocomplete="off">
+            <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem;">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .message {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        max-width: 80%;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+
+    .message.system .avatar {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--secondary);
+    }
+
+    .message.user .avatar {
+        background: var(--primary);
+        color: white;
+    }
+
+    .bubble {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        border-top-left-radius: 2px;
+        font-size: 0.95rem;
+        color: var(--text-light);
+        line-height: 1.5;
+    }
+
+    .message.user .bubble {
+        background: var(--primary);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 2px;
+    }
+</style>
+
+<script>
+    var AI_URL = "{% url 'ask_ai' file_id=file_id %}";
+    var chatBox = document.getElementById("chat-box");
+
+    function appendMessage(text, type) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${type}`;
+
+        const avatar = type === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+
+        msgDiv.innerHTML = `
+            <div class="avatar">${avatar}</div>
+            <div class="bubble">${text}</div>
+        `;
+
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function generateCleaningPlan() {
+        const btn = document.querySelector('.pulse-btn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Generating...';
+        btn.disabled = true;
+
+        sendMessage("Generate a recommended cleaning plan for this dataset.", true);
+
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 3000);
+    }
+
+    function sendMessage(questionText = null, isCleaningPlan = false) {
+        const input = document.getElementById("user_input");
+        const question = questionText || input.value.trim();
+        const btn = document.querySelector('button[type="submit"]');
+
+        if (!question) return;
+
+        // Add user message
+        appendMessage(question, "user");
+        if (!questionText) input.value = "";
+        btn.disabled = true;
+
+        // Add loading indicator
+        const loadingId = "loading-" + Date.now();
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "message system";
+        loadingDiv.id = loadingId;
+        loadingDiv.innerHTML = `
+            <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="bubble"><i class="fa-solid fa-ellipsis fa-bounce"></i> Thinking...</div>
+        `;
+        chatBox.appendChild(loadingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        fetch(AI_URL, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                question: question,
+                is_cleaning_plan: isCleaningPlan
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById(loadingId).remove();
+
+                if (data.answer) {
+                    appendMessage(data.answer, "system");
+                } else {
+                    appendMessage("Sorry, I encountered an error: " + (data.error || "Unknown error"), "system");
+                }
+            })
+            .catch(error => {
+                document.getElementById(loadingId).remove();
+                appendMessage("Network error. Please try again.", "system");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                input.focus();
+            });
+    }
+</script>
+{% endblock %}

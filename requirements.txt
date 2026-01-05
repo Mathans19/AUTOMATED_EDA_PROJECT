@@ -1,0 +1,9 @@
+Django==4.2.2
+mysqlclient==2.2.0
+pandas==2.1.4
+numpy==1.26.3
+plotly==5.18.0
+django-plotly-dash==2.4.5
+groq==0.4.2
+python-decouple==3.8
+
