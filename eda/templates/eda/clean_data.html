@@ -1,738 +1,937 @@
 {% extends 'eda/base.html' %}
-{% load static %}
 
 {% block title %}Data Cleaning - Automated Insights{% endblock %}
 
 {% block content %}
 <div class="cleaning-workspace">
-    <div class="workspace-grid">
-        <!-- Sidebar: Tools & Stats -->
-        <aside class="workspace-sidebar">
-            <div class="glass-card panel-header-card stark-card">
-                <div class="panel-header">
-                    <div class="header-main">
-                        <div class="header-icon-box" style="background: var(--iron-red); color: white;">
-                            <i class="fa-solid fa-shield-halved"></i>
-                        </div>
-                        <div>
-                            <h2 class="wanda-text">S.H.I.E.L.D. TACTICAL HUB</h2>
-                            <p class="text-secondary text-xs" style="letter-spacing: 2px;">Integrity Protocol v{{
-                                current_version|default:1 }}</p>
-                        </div>
+    <div class="grid-2">
+        <!-- Control Panel -->
+        <div class="control-panel glass-card tilt-card widow-border">
+            <div class="panel-header" style="justify-content: space-between; display: flex;">
+                <div style="display:flex; align-items:center; gap:var(--space-md);">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h2 class="wanda-text">Data Cleaning</h2>
+                        <p class="text-muted text-sm">Transform and optimize your dataset</p>
                     </div>
                 </div>
-
-                <div class="health-summary">
-                    <div class="health-metric">
-                        <span class="metric-label"
-                            style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Signal
-                            Integrity</span>
-                        <span class="metric-value wanda-text hulk-pulse" id="health-score-val"
-                            style="font-size: 2.2rem;">{{ health_score }}</span>
-                    </div>
-                    <div class="progress-rail" style="height: 6px; background: rgba(255,255,255,0.05);">
-                        <div id="health-score-bar" class="progress-fill"
-                            style="background: var(--primary); box-shadow: 0 0 10px var(--primary);"
-                            data-health="{{ health_score|default:0 }}">
-                        </div>
-                    </div>
-                    <div class="metric-group">
-                        <div class="mini-metric">
-                            <span class="text-xs text-muted">Records</span>
-                            <span id="total-rows-val" class="text-sm font-600">{{ total_rows }}</span>
-                        </div>
-                        <div class="mini-metric">
-                            <span class="text-xs text-muted">Features</span>
-                            <span id="total-cols-val" class="text-sm font-600">{{ column_info|length }}</span>
-                        </div>
-                    </div>
+                <div class="panel-status hulk-pulse"
+                    style="font-size:0.75rem; color:var(--success); font-weight:700; letter-spacing:0.1em; display:flex; align-items:center; gap:6px;">
+                    <span
+                        style="width:6px; height:6px; background:var(--success); border-radius:50%; box-shadow:0 0 5px var(--success); animation:blink 2s infinite;"></span>
+                    SYSTEM ONLINE
                 </div>
             </div>
 
-            <!-- Suggestions -->
-            <div class="glass-card section-card holo-plate widow-border">
-                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-wand-sparkles"></i> Stark Intel
+            <!-- Data Quality Summary -->
+            <div class="quality-summary">
+                <h3 class="section-title">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    Data Quality
                 </h3>
-                <div class="suggestion-stack" id="suggestions-box">
-                    {% for col, col_suggs in suggestions.items %}
-                    {% for sugg in col_suggs %}
-                    <div class="suggestion-item severity-{{ sugg.severity }}"
-                        onclick="applySuggestion('{{ col }}', '{{ sugg.action }}')"
-                        style="border-left: 3px solid var(--accent);">
-                        <div class="sugg-header">
-                            <span class="sugg-col" style="color: var(--accent);">{{ col }}</span>
-                            <span class="sugg-badge" style="background: var(--iron-red);">{{ sugg.severity }}</span>
-                        </div>
-                        <p class="sugg-msg">{{ sugg.reason }}</p>
-                        <div class="sugg-footer">
-                            <span>Auto-deploy available</span>
-                            <i class="fa-solid fa-bolt-lightning"></i>
-                        </div>
+                <div class="quality-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Rows</span>
+                        <span class="stat-value">{{ total_rows }}</span>
                     </div>
-                    {% endfor %}
-                    {% empty %}
-                    <div class="empty-state">System secure. No anomalies detected.</div>
-                    {% endfor %}
+                    <div class="stat-item">
+                        <span class="stat-label">Columns</span>
+                        <span class="stat-value">{{ column_info|length }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Operations Form -->
-            <div class="glass-card section-card stark-card widow-border">
-                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-screwdriver-wrench"></i>
-                    Refinement</h3>
-                <form id="cleaningForm" onsubmit="event.preventDefault(); updateTable(event.submitter);">
-                    {% csrf_token %}
-
-                    <div class="form-group">
-                        <label class="text-xs font-600 uppercase">Input Column</label>
-                        <select id="column" name="column" class="form-select stark-card" style="background: #000;">
-                            {% for col, _, _ in column_info %}
-                            <option value="{{ col }}">{{ col }}</option>
+            <!-- Missing Values Table -->
+            <div class="missing-values-section">
+                <h3 class="section-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Missing Values
+                </h3>
+                <div class="missing-table-wrapper">
+                    <table class="missing-table">
+                        <tbody>
+                            {% for col, missing, dtype in column_info %}
+                            <tr>
+                                <td class="col-name">
+                                    {{ col }}
+                                    <span class="col-type">{{ dtype }}</span>
+                                </td>
+                                <td class="col-missing {% if missing > 0 %}has-missing{% else %}no-missing{% endif %}">
+                                    {{ missing }}
+                                </td>
+                            </tr>
                             {% endfor %}
-                        </select>
-                    </div>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                    <div class="ops-accordion">
-                        <div class="op-group">
-                            <button type="button" class="op-toggle"
-                                onclick="this.nextElementSibling.classList.toggle('hidden')">
-                                Structural Mods <i class="fa-solid fa-chevron-down"></i>
-                            </button>
-                            <div class="op-options">
-                                <label class="op-row">
-                                    <input type="radio" name="action" value="drop_column">
-                                    <span class="op-label"><i class="fa-solid fa-trash-can"></i> Deconstruct</span>
-                                    <button type="submit" class="btn btn-primary thor-btn op-btn">Deploy</button>
-                                </label>
-                                <label class="op-row">
-                                    <input type="radio" name="action" value="rename_column">
-                                    <span class="op-label"><i class="fa-solid fa-pen"></i> Rebrand</span>
-                                    <div class="op-input-box">
-                                        <input type="text" name="new_name" placeholder="Alias..." class="mini-input">
-                                        <button type="submit" class="btn btn-primary thor-btn op-btn">Deploy</button>
-                                    </div>
-                                </label>
-                            </div>
+            <!-- Cleaning Form -->
+            <form id="cleaningForm" class="cleaning-form"
+                onsubmit="event.preventDefault(); updateTable(event.submitter);">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>
+                        <i class="fa-solid fa-table-columns"></i>
+                        Target Column
+                    </label>
+                    <select id="column" name="column" class="select-enhanced">
+                        {% for col, _, _ in column_info %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fa-solid fa-sliders"></i>
+                        Operation
+                    </label>
+
+                    <div class="operation-groups">
+                        <div class="col-group">
+                            <div class="op-group-title">Column Actions</div>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="drop_column">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Drop Column</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Drop Column
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="rename_column">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-pen"></i>
+                                    <span>Rename Column</span>
+                                </span>
+                                <div class="op-settings">
+                                    <input type="text" id="new_name" name="new_name" placeholder="Enter new column name"
+                                        class="glass-input">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Rename
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="convert_type">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                    <span>Convert Type</span>
+                                </span>
+                                <div class="op-settings">
+                                    <select id="new_type" name="new_type" class="glass-input">
+                                        <option value="numeric">Numeric (Float/Int)</option>
+                                        <option value="datetime">DateTime</option>
+                                        <option value="categorical">Categorical (String)</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Convert
+                                    </button>
+                                </div>
+                            </label>
                         </div>
 
                         <div class="op-group">
-                            <button type="button" class="op-toggle"
-                                onclick="this.nextElementSibling.classList.toggle('hidden')">
-                                Quality Override <i class="fa-solid fa-chevron-down"></i>
-                            </button>
-                            <div class="op-options hidden">
-                                <label class="op-row">
-                                    <input type="radio" name="action" value="drop_na">
-                                    <span class="op-label">Purge Nulls</span>
-                                    <button type="submit" class="btn btn-primary hulk-btn op-btn">SMASH</button>
-                                </label>
-                                <label class="op-row">
-                                    <input type="radio" name="action" value="remove_duplicates">
-                                    <span class="op-label">Kill Dups</span>
-                                    <button type="submit" class="btn btn-primary widow-btn op-btn"
-                                        style="background: #000; border: 1px solid var(--iron-red); color: white;">Execute</button>
-                                </label>
-                            </div>
+                            <div class="op-group-title">Data Quality</div>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="drop_na">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-filter"></i>
+                                    <span>Drop Missing</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Drop Missing Rows
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="remove_duplicates">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-copy"></i>
+                                    <span>Remove Duplicates</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Remove Duplicates
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="remove_outliers">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-wave-square"></i>
+                                    <span>Remove Outliers</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Remove Outliers (IQR)
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="op-group">
+                            <div class="op-group-title">Missing Value Handling</div>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_mean">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-calculator"></i>
+                                    <span>Fill with Mean</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Fill (Mean)
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_median">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-arrows-to-dot"></i>
+                                    <span>Fill with Median</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Fill (Median)
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_mode">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-bullseye"></i>
+                                    <span>Fill with Mode</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Fill (Mode)
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_constant">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-font"></i>
+                                    <span>Fill with Constant</span>
+                                </span>
+                                <div class="op-settings">
+                                    <input type="text" id="fill_value" name="fill_value"
+                                        placeholder="Constant value to fill" class="glass-input">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Fill Value
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_ffill">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-arrow-down-long"></i>
+                                    <span>Forward Fill</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Apply Forward Fill
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="fill_bfill">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-arrow-up-long"></i>
+                                    <span>Backward Fill</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Apply Backward Fill
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="op-group">
+                            <div class="op-group-title">Encoding</div>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="encode_onehot">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-grip"></i>
+                                    <span>One-hot Encode</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Apply One-Hot
+                                    </button>
+                                </div>
+                            </label>
+                            <label class="op-card">
+                                <input type="radio" name="action" value="encode_label">
+                                <span class="op-content">
+                                    <i class="fa-solid fa-list-ol"></i>
+                                    <span>Label Encode</span>
+                                </span>
+                                <div class="op-settings">
+                                    <button type="submit" class="btn btn-sm btn-primary w-full mt-2">
+                                        <i class="fa-solid fa-check"></i> Apply Label Encoding
+                                    </button>
+                                </div>
+                            </label>
                         </div>
                     </div>
-
-                    <div class="action-footer">
-                        <button type="button" id="undo-btn" class="btn btn-secondary w-full" onclick="undoAction()" {%
-                            if current_version <=1 %}disabled{% endif %} style="border-color: var(--accent);">
-                            <i class="fa-solid fa-rotate-left"></i> ROLLBACK (v<span id="version-num">{{
-                                current_version|default:1 }}</span>)
-                        </button>
-                        <a href="{% url 'download_cleaned_data' file_id=file_id %}"
-                            class="btn btn-ghost w-full thor-btn" style="margin-top: 10px;">
-                            <i class="fa-solid fa-download"></i> Extract CSV
-                        </a>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Log -->
-            <div class="terminal-log holo-plate" id="clean-terminal" style="border-top: 2px solid var(--primary);">
-                <div class="log-line">S.H.I.E.L.D. Secure Uplink established...</div>
-            </div>
-        </aside>
-
-        <!-- Main: Data View -->
-        <main class="workspace-main">
-            <div class="glass-card preview-card holo-plate">
-                <div class="preview-header">
-                    <div class="header-left">
-                        <h3 class="wanda-text">Uplink Feed</h3>
-                        <span class="version-label" style="background: var(--iron-red); color: white;">PV-{{
-                            current_version|default:1 }}</span>
-                    </div>
-                    <div class="header-right">
-                        <span class="text-muted text-xs"><i class="fa-solid fa-database"></i> <span
-                                id="rows-count-meta">{{ total_rows }}</span> DATASET_STREAM_ACTIVE</span>
-                    </div>
                 </div>
 
-                <div id="table-container" class="table-scroll" style="border: 1px solid var(--primary);">
-                    {{ df|safe }}
+                <style>
+                    /* Dynamic reveal styles */
+                    .op-settings {
+                        max-height: 0;
+                        overflow: hidden;
+                        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+                        opacity: 0;
+                        margin-top: 0;
+                        padding: 0 var(--space-md);
+                    }
+
+                    /* When radio is checked, reveal */
+                    .op-card input:checked~.op-settings {
+                        max-height: 150px;
+                        opacity: 1;
+                        margin-top: var(--space-sm);
+                        padding-bottom: var(--space-sm);
+                    }
+
+                    .glass-input {
+                        background: rgba(0, 0, 0, 0.3);
+                        border: 1px solid var(--glass-border);
+                        border-radius: var(--radius-sm);
+                        color: var(--text-primary);
+                        padding: 8px 12px;
+                        width: 100%;
+                        font-family: inherit;
+                        transition: border-color 0.2s;
+                    }
+
+                    .glass-input:focus {
+                        outline: none;
+                        border-color: var(--primary);
+                        background: rgba(0, 243, 255, 0.05);
+                    }
+
+                    /* Fix dropdown options visibility */
+                    .glass-input option {
+                        background-color: var(--bg-secondary);
+                        color: var(--text-primary);
+                    }
+
+                    .mt-2 {
+                        margin-top: 0.5rem;
+                    }
+                </style>
+
+                <div class="form-actions">
+                    <a href="{% url 'download_cleaned_data' file_id=file_id %}" class="btn btn-accent w-full">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download CSV</span>
+                    </a>
+                    <button type="button" onclick="undoLastAction()" class="btn btn-secondary w-full">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Undo Last Action</span>
+                    </button>
                 </div>
 
-                <div id="table-skeleton" class="hidden">
-                    <div class="shimmer-row"></div>
-                    <div class="shimmer-row"></div>
+                <!-- History of recent operations -->
+                <div class="history-panel">
+                    <div class="history-header">
+                        <span class="text-xs text-muted">Recent Cleaning Steps</span>
+                    </div>
+                    <div id="history-chips" class="history-chips"></div>
+                </div>
+
+                <!-- Terminal Log Widget -->
+                <div class="terminal-window" id="clean-terminal">
+                    <div class="terminal-line"><span class="terminal-prefix">➜</span> <span
+                            class="terminal-time">12:00:01</span> System Ready...</div>
+                    <div class="terminal-line"><span class="terminal-prefix">➜</span> <span
+                            class="terminal-time">12:00:02</span> Listening for cleaning events...</div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Floating Quick Action Button -->
+        <div class="fab-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 100;">
+            <button class="fab-btn btn-primary" onclick="showToast('Auto-Fix Initiated', 'success')"
+                style="width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 0 20px var(--primary-glow); font-size: 1.2rem;">
+                <i class="fa-solid fa-robot"></i>
+            </button>
+        </div>
+
+        <!-- Data Preview Panel -->
+        <div class="preview-panel glass-card">
+            <div class="preview-header">
+                <h2>Dataset Preview</h2>
+                <div class="preview-meta">
+                    <i class="fa-solid fa-table"></i>
+                    <span>{{ total_rows }} Rows</span>
+                    {% if total_rows > 10000 %}
+                    <span class="badge badge-warning">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Preview truncated
+                    </span>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="fab-action">
-                <button class="btn btn-primary thor-btn fab-trigger"
-                    style="width: 60px; height: 60px; border-radius: 50%;"
-                    onclick="showToast('Initializing JARVIS Auto-fix...', 'info')">
-                    <i class="fa-solid fa-robot" style="font-size: 24px;"></i>
-                </button>
+            <div id="table-container" class="table-container">
+                {{ df|safe }}
             </div>
-        </main>
+
+            <div id="table-skeleton" style="display:none;" class="table-skeleton">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
     .cleaning-workspace {
-        min-height: calc(100vh - 120px);
+        padding-top: 0;
     }
 
-    .workspace-grid {
-        display: grid;
-        grid-template-columns: 360px 1fr;
-        gap: var(--space-32);
-        align-items: start;
-    }
-
-    .workspace-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-24);
+    .control-panel {
         position: sticky;
         top: 100px;
-        max-height: calc(100vh - 140px);
+        max-height: calc(100vh - 120px);
         overflow-y: auto;
-        padding-right: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
     }
 
     .panel-header {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: var(--space-24);
+        align-items: center;
+        gap: var(--space-md);
+        padding-bottom: var(--space-lg);
+        border-bottom: 1px solid var(--glass-border);
     }
 
-    .header-main {
-        display: flex;
-        gap: 12px;
-    }
-
-    .header-icon-box {
-        width: 40px;
-        height: 40px;
-        background: var(--primary-muted);
-        color: var(--primary);
-        border-radius: 8px;
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--gradient-secondary);
+        border-radius: var(--radius-md);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        box-shadow: 0 0 24px rgba(236, 72, 153, 0.3);
     }
 
-    .header-main h2 {
-        font-size: 18px;
+    .header-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .panel-header h2 {
         margin: 0;
+        font-size: 1.5rem;
     }
 
-    .system-status {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--success);
+    .section-title {
+        font-size: 0.85rem;
         text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-md);
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: var(--space-xs);
     }
 
-    .status-dot {
-        width: 6px;
-        height: 6px;
-        background: var(--success);
-        border-radius: 50%;
-        animation: pulse 2s infinite;
+    .section-title i {
+        color: var(--primary);
     }
 
-    /* Health */
-    .health-summary {
+    .quality-summary {
+        padding: var(--space-lg);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+    }
+
+    .quality-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+    }
+
+    .stat-item {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: var(--space-xs);
     }
 
-    .health-metric {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .metric-label {
-        font-size: 12px;
+    .stat-label {
+        font-size: 0.8rem;
         color: var(--text-muted);
         text-transform: uppercase;
-        font-weight: 600;
+        letter-spacing: 0.05em;
     }
 
-    .metric-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Outfit';
-    }
-
-    .metric-group {
-        display: flex;
-        gap: 24px;
-        margin-top: 4px;
-    }
-
-    .mini-metric {
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Suggestions */
-    .suggestion-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .suggestion-item {
-        padding: 12px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--glass-border);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .suggestion-item:hover {
-        border-color: var(--primary);
-        background: rgba(0, 229, 255, 0.03);
-    }
-
-    .sugg-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-    }
-
-    .sugg-col {
-        font-size: 12px;
+    .stat-value {
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--primary);
     }
 
-    .sugg-badge {
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background: var(--glass-border);
-        text-transform: uppercase;
-    }
-
-    .sugg-msg {
-        font-size: 13px;
-        color: var(--text-secondary);
-        line-height: 1.4;
-        margin-bottom: 8px;
-    }
-
-    .sugg-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 11px;
-        color: var(--text-muted);
-        font-weight: 600;
-    }
-
-    /* Operations Form */
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-
-    .form-select {
-        background: var(--bg-primary);
+    .missing-values-section {
+        padding: var(--space-lg);
+        background: rgba(0, 0, 0, 0.2);
         border: 1px solid var(--glass-border);
-        color: var(--text-primary);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 14px;
+        border-radius: var(--radius-md);
     }
 
-    .ops-accordion {
+    .missing-table-wrapper {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .missing-table {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .missing-table tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .missing-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .col-name {
+        padding: var(--space-sm) 0;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .col-type {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-left: var(--space-xs);
+        opacity: 0.7;
+    }
+
+    .col-missing {
+        text-align: right;
+        font-weight: 700;
+        padding: var(--space-sm) 0;
+    }
+
+    .has-missing {
+        color: var(--danger);
+    }
+
+    .no-missing {
+        color: var(--success);
+    }
+
+    .cleaning-form {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-bottom: 24px;
+        gap: var(--space-lg);
     }
 
-    .op-toggle {
-        width: 100%;
-        text-align: left;
-        padding: 10px 12px;
+    .select-enhanced {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .operation-groups {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .op-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .op-group-title {
+        font-size: 0.75rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+    }
+
+    .op-card {
+        display: block;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .op-card>input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .op-content {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--glass-border);
-        border-radius: 6px;
-        color: var(--text-primary);
-        font-size: 13px;
-        font-weight: 600;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-    }
-
-    .op-options {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 8px 4px;
-    }
-
-    .op-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .op-row:hover {
-        background: rgba(255, 255, 255, 0.03);
-    }
-
-    .op-row input {
-        display: none;
-    }
-
-    .op-label {
-        font-size: 13px;
+        border-radius: var(--radius-sm);
+        transition: all var(--transition-fast);
         color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        gap: 10px;
     }
 
-    .op-btn {
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        background: var(--primary);
-        color: var(--bg-primary);
-        border: none;
-        cursor: pointer;
-        font-weight: 700;
-        opacity: 0;
-        pointer-events: none;
+    .op-content i {
+        font-size: 1.1rem;
+        width: 24px;
+        text-align: center;
     }
 
-    .op-row input:checked+.op-label {
+    .op-card:hover .op-content {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+        transform: translateX(4px);
+    }
+
+    .op-card input:checked+.op-content {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: var(--primary);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(99, 102, 241, 0.2);
+    }
+
+    .op-card input:checked+.op-content i {
         color: var(--primary);
     }
 
-    .op-row input:checked~.op-btn {
-        opacity: 1;
-        pointer-events: auto;
+    .dynamic-input {
+        margin-top: var(--space-md);
+        animation: slideIn 0.3s ease-out;
     }
 
-    .op-input-box {
-        display: none;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .op-row input:checked~.op-input-box {
-        display: flex;
-    }
-
-    .mini-input {
-        width: 80px;
-        background: var(--bg-primary);
-        border: 1px solid var(--glass-border);
-        color: var(--text-primary);
-        font-size: 11px;
-        padding: 4px;
-        border-radius: 4px;
-    }
-
-    .action-footer {
+    .form-actions {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: var(--space-md);
+        margin-top: auto;
     }
 
-    /* Table Preview */
-    .preview-card {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
+    .preview-panel {
         min-height: 80vh;
-        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .preview-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-md);
         border-bottom: 1px solid var(--glass-border);
-        padding-bottom: 12px;
     }
 
-    .header-left {
+    .preview-header h2 {
+        margin: 0;
+    }
+
+    .preview-meta {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        color: var(--text-muted);
     }
 
-    .version-label {
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: var(--primary-muted);
-        color: var(--primary);
-        font-size: 12px;
-        font-weight: 700;
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: 4px var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 600;
     }
 
-    .table-scroll {
+    .badge-warning {
+        background: var(--warning-bg);
+        color: var(--warning);
+    }
+
+    .history-panel {
+        padding: var(--space-md);
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--glass-border);
+    }
+
+    .history-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+        margin-top: var(--space-sm);
+    }
+
+    .history-chip {
+        padding: 4px 8px;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    #table-container {
         flex: 1;
         overflow: auto;
-        background: var(--bg-primary);
-        border-radius: 8px;
-        border: 1px solid var(--glass-border);
     }
 
-    /* Terminal */
-    .terminal-log {
-        background: #000;
-        border-radius: 6px;
-        padding: 12px;
-        font-family: monospace;
-        font-size: 11px;
-        color: #fff;
-        opacity: 0.7;
-        height: 100px;
-        overflow-y: auto;
+    .table-skeleton {
+        padding: var(--space-md);
     }
 
-    .log-line {
-        margin-bottom: 4px;
-        color: #888;
+    .skeleton-row {
+        height: 16px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0.05),
+                rgba(255, 255, 255, 0.15),
+                rgba(255, 255, 255, 0.05));
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
     }
 
-    .log-line::before {
-        content: '➜ ';
-        color: var(--primary);
-    }
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
 
-    /* Fab */
-    .fab-action {
-        position: fixed;
-        bottom: 32px;
-        right: 32px;
-        z-index: 100;
-    }
-
-    .fab-trigger {
-        border: none;
-        width: 48px;
-        height: 48px;
-        border-radius: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition);
-        box-shadow: 0 8px 32px rgba(0, 229, 255, 0.3);
-        overflow: hidden;
-    }
-
-    .fab-trigger i {
-        font-size: 18px;
-    }
-
-    .fab-trigger span {
-        display: none;
-        margin-left: 8px;
-        font-weight: 700;
-        font-size: 13px;
-    }
-
-    .fab-trigger:hover {
-        width: 120px;
-        border-radius: 24px;
-    }
-
-    .fab-trigger:hover span {
-        display: inline;
+        100% {
+            background-position: -200% 0;
+        }
     }
 
     @media (max-width: 1200px) {
-        .workspace-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .workspace-sidebar {
-            position: static;
+        .control-panel {
+            position: relative;
+            top: 0;
             max-height: none;
         }
     }
 </style>
 
-<style>
-    .cleaning-workspace {
-        padding-top: 0;
-    }
-</style>
-
 <script>
-    const FILE_ID = parseInt("{{ file_id }}", 10);
-    const UNDO_CLEANING_URL = "{% url 'undo_cleaning' file_id=file_id %}";
+    var FILE_ID = parseInt("{{ file_id }}", 10);
+    var APPLY_CLEANING_URL = "{% url 'apply_cleaning' %}";
 
-    // System logging helper
-    function sysLog(msg, type = 'info') {
+
+    function logToTerminal(msg) {
         const term = document.getElementById('clean-terminal');
         if (!term) return;
+        const time = new Date().toLocaleTimeString('en-GB');
         const line = document.createElement('div');
-        line.className = `log-line log-${type}`;
-        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        term.prepend(line);
-        while (term.children.length > 20) term.lastChild.remove();
+        line.className = 'terminal-line';
+        line.innerHTML = `<span class="terminal-prefix">➜</span> <span class="terminal-time">${time}</span> ${msg}`;
+        term.appendChild(line);
+        term.scrollTop = term.scrollHeight;
     }
 
-    // Initialize Health Bar on load
-    document.addEventListener('DOMContentLoaded', () => {
-        const bar = document.getElementById('health-score-bar');
-        if (bar) bar.style.width = (bar.dataset.health || 0) + '%';
-        sysLog('System Initialized. Ready for operations.');
-    });
+    function updateTable(btnElement) {
+        const selectedColumn = document.getElementById("column").value;
+        const actionElement = document.querySelector('input[name="action"]:checked');
 
-    function applySuggestion(column, action) {
-        const sel = document.getElementById('column');
-        if (sel) sel.value = column;
-        const radio = document.querySelector(`input[name="action"][value="${action}"]`);
-        if (radio) {
-            radio.checked = true;
-            const opt = radio.closest('.op-options');
-            if (opt) opt.classList.remove('hidden');
-            sysLog(`AI Recommendation: Prepared ${action} on ${column}`);
-            showToast(`Ready to apply ${action.replace('_', ' ')}`, 'info');
-        }
-    }
-
-    async function updateTable(btn) {
-        const form = document.getElementById('cleaningForm');
-        const formData = new FormData(form);
-        const submitBtn = btn || form.querySelector('button[type="submit"]');
-
-        if (!formData.get('action')) {
-            showToast("Please select an operation", "warning");
+        if (!actionElement) {
+            showToast("Please select an operation first.", "warning");
             return;
         }
 
-        submitBtn.disabled = true;
-        const origText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch strange-spinner"></i> PROCESSING...';
-
-        const skel = document.getElementById('table-skeleton');
-        const cont = document.getElementById('table-container');
-        if (skel) skel.classList.remove('hidden');
-        if (cont) cont.style.opacity = '0.5';
-
-        sysLog(`Applying ${formData.get('action')} to ${formData.get('column')}...`);
-
-        try {
-            const res = await fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            });
-
-            const data = await res.json();
-            if (data.status === 'success') {
-                // Update Numeric Stats
-                document.getElementById('health-score-val').textContent = data.health_score;
-                const hBar = document.getElementById('health-score-bar');
-                if (hBar) {
-                    hBar.dataset.health = data.health_score;
-                    hBar.style.width = data.health_score + '%';
-                }
-                document.getElementById('total-rows-val').textContent = data.total_rows;
-                document.getElementById('rows-count-meta').textContent = data.total_rows;
-
-                // Update Table View
-                if (cont) cont.innerHTML = data.df_html;
-
-                // Update Versioning
-                const undoBtn = document.getElementById('undo-btn');
-                if (undoBtn) undoBtn.disabled = false;
-                document.getElementById('version-num').textContent = data.current_version;
-                document.getElementById('version-badge').textContent = data.current_version;
-
-                sysLog(`Successfully applied ${formData.get('action')}`, 'success');
-                showToast('Operation Successful', 'success');
-            } else {
-                sysLog(`Operation Failed: ${data.message}`, 'error');
-                showToast(data.message, 'error');
-            }
-        } catch (e) {
-            sysLog('Network transmission error', 'error');
-            showToast('Communication failed', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = origText;
-            if (skel) skel.classList.add('hidden');
-            if (cont) cont.style.opacity = '1';
+        // Fallback if btnElement is missing (e.g. Enter key pressed) based on selected action
+        if (!btnElement) {
+            const settings = actionElement.closest('.op-card').querySelector('.op-settings');
+            if (settings) btnElement = settings.querySelector('button');
         }
+
+        const btn = btnElement || document.querySelector('button[type="submit"]'); // Last resort
+
+        const action = actionElement.value;
+        const newName = document.getElementById("new_name").value;
+        const newType = document.getElementById("new_type").value;
+        const fillValue = document.getElementById("fill_value").value;
+
+        if (action === 'rename_column' && !newName) {
+            showToast("Please enter a new name.", "warning");
+            return;
+        }
+        if (action === 'fill_constant' && !fillValue) {
+            showToast("Please enter a constant value.", "warning");
+            return;
+        }
+
+        logToTerminal(`Initiating ${action} on ${selectedColumn}...`);
+
+        const originalBtnText = btn ? btn.innerHTML : 'Apply';
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Processing...';
+            btn.disabled = true;
+        }
+
+        const tableContainer = document.getElementById("table-container");
+        const skeleton = document.getElementById("table-skeleton");
+        if (skeleton) skeleton.style.display = "block";
+        if (tableContainer) tableContainer.style.opacity = "0.3";
+
+        const requestData = {
+            column: selectedColumn,
+            action: action,
+            file_id: FILE_ID,
+            new_name: newName,
+            new_type: newType,
+            value: fillValue
+        };
+
+        fetch(APPLY_CLEANING_URL, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (!body.success) {
+                    throw new Error(body.error || 'Operation failed');
+                }
+
+                document.getElementById("table-container").innerHTML = body.table_html;
+
+                logToTerminal(`Success: ${action} completed. Rows: ${body.total_rows}`);
+                showToast("Operation successful", "success");
+
+                // Update history
+                const chipsContainer = document.getElementById('history-chips');
+                const chip = document.createElement('div');
+                chip.className = 'history-chip';
+                chip.innerHTML = `<i class="fa-solid fa-check"></i> ${action}: ${selectedColumn}`;
+                chipsContainer.prepend(chip);
+
+                // Update Stats
+                const statValues = document.querySelectorAll(".stat-value");
+                if (statValues.length >= 2) {
+                    statValues[0].textContent = body.total_rows;
+                    if (body.column_info) {
+                        statValues[1].textContent = body.column_info.length;
+                    }
+                }
+
+                // Update Preview Meta
+                const previewMeta = document.querySelector(".preview-meta span");
+                if (previewMeta) previewMeta.textContent = `${body.total_rows} Rows`;
+
+                // Update Missing Values Table & Dropdowns
+                if (body.column_info) {
+                    const tbody = document.querySelector(".missing-table tbody");
+                    if (tbody) {
+                        let html = "";
+                        body.column_info.forEach(info => {
+                            html += `<tr><td class="col-name">${info[0]} <span class="col-type">${info[2]}</span></td><td class="col-missing ${info[1] > 0 ? 'has-missing' : 'no-missing'}">${info[1]}</td></tr>`;
+                        });
+                        tbody.innerHTML = html;
+                    }
+
+                    if (action === "rename_column" || action === "drop_column") {
+                        const columnSelect = document.getElementById("column");
+                        let options = "";
+                        body.column_info.forEach(info => {
+                            options += `<option value="${info[0]}">${info[0]}</option>`;
+                        });
+                        columnSelect.innerHTML = options;
+
+                        if (action === "rename_column") columnSelect.value = newName;
+                        else columnSelect.value = body.column_info.length > 0 ? body.column_info[0][0] : "";
+                    }
+                }
+
+                // Reset Inputs
+                document.getElementById("new_name").value = "";
+                document.getElementById("fill_value").value = "";
+
+                if (btn) {
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                }
+                if (skeleton) skeleton.style.display = "none";
+                if (tableContainer) tableContainer.style.opacity = "1";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("Error: " + error.message, "error");
+                logToTerminal(`Error: ${error.message}`);
+                if (btn) {
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                }
+                if (skeleton) skeleton.style.display = "none";
+                if (tableContainer) tableContainer.style.opacity = "1";
+            });
     }
 
-    async function undoAction() {
-        const btn = document.getElementById('undo-btn');
-        if (!btn) return;
-        btn.disabled = true;
-        sysLog('Initiating rollback sequence...', 'warning');
-        try {
-            const res = await fetch(UNDO_CLEANING_URL, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await res.json();
-            if (data.status === 'success') {
-                sysLog('Rollback successful. Reloading state...', 'success');
-                location.reload();
-            } else {
-                showToast(data.message, 'error');
-                btn.disabled = false;
+
+
+    function undoLastAction() {
+        const undoUrl = "{% url 'undo_cleaning' file_id=file_id %}";
+        logToTerminal("Attempting to undo last action...");
+
+        fetch(undoUrl, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "X-Requested-With": "XMLHttpRequest"
             }
-        } catch (e) {
-            showToast('Rollback request failed', 'error');
-            btn.disabled = false;
-        }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("table-container").innerHTML = data.table_html;
+                    showToast(data.message || "Action undone successfully!", "success");
+                    logToTerminal(data.message || "Reverted successfully.");
+                    // Reload to update column info if needed, or update manually
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.error || "Undo failed", "error");
+                }
+            })
+            .catch(error => {
+                showToast("Network error during undo", "error");
+                console.error("Undo Error:", error);
+            });
     }
 </script>
 {% endblock %}

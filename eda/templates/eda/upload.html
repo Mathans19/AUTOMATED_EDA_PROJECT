@@ -1,189 +1,544 @@
 {% extends 'eda/base.html' %}
-{% load static %}
 
-{% block title %}INITIATE UPLINK - Avengers Data Hub{% endblock %}
+{% block title %}Upload Dataset - Automated Insights{% endblock %}
 
 {% block content %}
-<div class="upload-screen"
-    style="height: calc(100vh - 120px); display: flex; align-items: center; justify-content: center; overflow: hidden; background: url(&quot;{% static 'eda/images/tesseract.png' %}&quot;) no-repeat center center; background-size: cover; border-radius: 20px; box-shadow: inset 0 0 100px #000;">
-
-    <div class="upload-card stark-card holo-plate"
-        style="width: 550px; padding: 40px; border-radius: 30px; border: 2px solid var(--primary) !important;">
-
-        <div class="upload-header text-center" style="margin-bottom: 30px;">
-            <div class="shield-logo hulk-pulse" style="font-size: 60px; color: var(--primary); margin-bottom: 20px;">
-                <i class="fa-solid fa-cube"></i>
+<div class="upload-hero">
+    <div class="upload-container">
+        <!-- Left Panel: Info & Status -->
+        <div class="hero-left">
+            <div class="status-widget">
+                <span class="status-dot"></span> SECURE CHANNEL ACTIVE
             </div>
-            <h1 class="wanda-text">TESSERACT UPLINK</h1>
-            <p class="text-secondary" style="font-size: 0.9rem; letter-spacing: 1px;">Initialize dimensional data
-                transmission protocols.</p>
+
+            <h1 class="hero-title wanda-text">INITIALIZE<br>DATA UPLINK</h1>
+
+            <p class="hero-subtitle">
+                Securely transfer your dataset to the quantum core.
+                AI analysis and automated cleaning protocols standing by.
+            </p>
+
+            <!-- Feature Pills (Moved here) -->
+            <div class="feature-pills">
+                <div class="pill">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Auto-Sanitization</span>
+                </div>
+                <div class="pill">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Visual Transformation</span>
+                </div>
+                <div class="pill">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Neural Insights</span>
+                </div>
+            </div>
         </div>
 
-        <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
-            {% csrf_token %}
-            <div id="drop-zone" class="drop-zone holo-plate"
-                style="border: 2px dashed var(--primary); padding: 50px 20px; border-radius: 20px; text-align: center; background: rgba(0,229,255,0.02);">
-                <input type="file" name="file" id="fileInput" accept=".csv" hidden>
+        <!-- Right Panel: Interaction Core -->
+        <div class="hero-right">
+            <!-- Upload Card -->
+            <div class="upload-card glass-card tilt-card">
+                <div class="card-glow-bg"></div> <!-- Arc Reactor Glow behind -->
+                <form method="post" enctype="multipart/form-data" id="upload-form">
+                    {% csrf_token %}
 
-                <div class="drop-content">
-                    <div class="upload-icon-box" style="font-size: 50px; color: var(--accent); margin-bottom: 15px;">
-                        <i class="fa-solid fa-atom"></i>
-                    </div>
-                    <h3 class="wanda-text" style="font-size: 1.2rem;">COMMAND MODULE</h3>
-                    <p class="text-sm">Transmit CSV stream or <span class="browse-btn"
-                            style="color: var(--primary); font-weight: 800;">OPEN COMMS</span></p>
-                    <span style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">CAPACITY: 50MB MAX</span>
-                </div>
-
-                <!-- Progress State: Strange Spinner -->
-                <div id="upload-progress" class="upload-progress hidden" style="margin-top: 20px;">
-                    <div class="spinner-box">
-                        <i class="fa-solid fa-circle-notch strange-spinner" style="font-size: 40px;"></i>
-                    </div>
-                    <div class="progress-info" style="margin-top: 15px;">
-                        <span id="progress-text" class="wanda-text" style="font-size: 0.8rem;">SECURIING DIMENSIONAL
-                            SIGNAL...</span>
-                        <div class="progress-bar-container"
-                            style="height: 6px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 10px; overflow: hidden;">
-                            <div id="progress-bar" class="progress-bar"
-                                style="height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; box-shadow: 0 0 15px var(--primary);">
+                    <!-- Drop Zone -->
+                    <div id="drop-zone" class="drop-zone">
+                        <div class="scan-line"></div>
+                        <div class="drop-zone-content">
+                            <div class="upload-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
                             </div>
+                            <h3 class="drop-title wanda-text">TESSERACT UPLINK</h3>
+                            <p class="drop-subtitle">INITIATE UPLOAD SEQUENCE</p>
+                            <p id="file-name" class="file-name"></p>
+                            {{ form.file }}
+                        </div>
+
+                        <!-- Tech overlay corners -->
+                        <div class="corner corner-tl"></div>
+                        <div class="corner corner-tr"></div>
+                        <div class="corner corner-bl"></div>
+                        <div class="corner corner-br"></div>
+                    </div>
+
+                    <!-- Progress Bar (Hidden by default) -->
+                    <div id="progress-container" class="progress-section" style="display: none;">
+                        <div class="progress-label">
+                            <span id="progress-text">UPLOADING...</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="progress-bar" class="progress-fill"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Selected File State -->
-                <div id="file-ready" class="file-ready hidden" style="margin-top: 20px;">
-                    <i class="fa-solid fa-file-csv selected-icon hulk-pulse"
-                        style="font-size: 50px; color: var(--success);"></i>
-                    <div class="ready-info" style="margin-top: 10px;">
-                        <span id="file-name" class="wanda-text" style="font-size: 1rem;">Unknown.csv</span>
-                        <span id="file-size" class="text-xs" style="display: block; color: var(--text-muted);">0
-                            KB</span>
+                    <!-- Dataset Name Input -->
+                    <div class="form-group">
+                        <label for="id_name">
+                            <i class="fa-solid fa-tag"></i> HIDDEN IDENTIFIER
+                        </label>
+                        {{ form.name }}
                     </div>
-                    <button type="button" class="btn btn-secondary thor-btn" onclick="resetUpload()"
-                        style="margin-top: 15px; padding: 5px 20px; font-size: 11px;">ABORT</button>
-                </div>
-            </div>
 
-            <div class="form-actions" style="margin-top: 30px;">
-                <button type="submit" id="submitBtn" class="btn btn-primary thor-btn w-full btn-lg" disabled
-                    style="height: 55px; font-size: 1.1rem; border: 1px solid var(--accent);">
-                    <i class="fa-solid fa-bolt-lightning"></i>
-                    <span>EXECUTE UPLINK</span>
-                </button>
-            </div>
-        </form>
-
-        <div class="upload-features widow-border"
-            style="display: flex; justify-content: space-around; margin-top: 30px; padding-top: 25px;">
-            <div class="u-feature text-center">
-                <i class="fa-solid fa-lock" style="font-size: 18px; color: var(--accent); margin-bottom: 5px;"></i>
-                <div style="font-size: 10px;">STARK SECURE</div>
-            </div>
-            <div class="u-feature text-center">
-                <i class="fa-solid fa-microchip"
-                    style="font-size: 18px; color: var(--primary); margin-bottom: 5px;"></i>
-                <div style="font-size: 10px;">AUTO-REFINERY</div>
-            </div>
-            <div class="u-feature text-center">
-                <i class="fa-solid fa-shield-virus"
-                    style="font-size: 18px; color: var(--success); margin-bottom: 5px;"></i>
-                <div style="font-size: 10px;">S.H.I.E.L.D. VERIFIED</div>
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary thor-btn w-full btn-lg" id="submit-btn" disabled>
+                        <i class="fa-solid fa-rocket"></i>
+                        <span>ENGAGE PROTOCOLS</span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Fixed Page Layout - No Scrolling */
+    .upload-hero {
+        height: calc(100vh - 80px);
+        /* Fill screen minus navbar */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 var(--space-2xl);
+        position: relative;
+        overflow: hidden;
+        /* Crucial for "one frame" request */
+    }
+
+    .upload-container {
+        width: 100%;
+        max-width: 1400px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        /* Split screen */
+        gap: var(--space-3xl);
+        align-items: center;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Left Panel Styles */
+    .hero-left {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .hero-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 4.5rem;
+        /* Larger, more cinematic */
+        line-height: 1;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--space-lg);
+        background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        text-align: left;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        max-width: 90%;
+        margin-bottom: var(--space-2xl);
+        text-align: left;
+        line-height: 1.6;
+        border-left: 2px solid var(--primary);
+        padding-left: var(--space-md);
+    }
+
+    /* Right Panel Styles */
+    .hero-right {
+        perspective: 1000px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .upload-card {
+        padding: var(--space-2xl);
+        width: 100%;
+        max-width: 550px;
+        border: 1px solid rgba(0, 243, 255, 0.3);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    /* Arc Reactor Glow Effect */
+    .card-glow-bg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(0, 243, 255, 0.2) 0%, transparent 70%);
+        z-index: -1;
+        animation: pulseGlow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+
+        0%,
+        100% {
+            opacity: 0.5;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        50% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+    }
+
+    /* Drop Zone Updates */
+    .drop-zone {
+        border: 1px dashed var(--glass-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2xl);
+        text-align: center;
+        transition: all var(--transition-base);
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.3);
+        margin-bottom: var(--space-xl);
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+        /* Fixed height for consistency */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .drop-zone.drag-active {
+        border-color: var(--primary);
+        background: rgba(0, 243, 255, 0.05);
+        box-shadow: inset 0 0 30px var(--primary-glow);
+    }
+
+    .drop-title {
+        font-size: 1.4rem;
+        margin-bottom: var(--space-xs);
+        color: var(--text-primary);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+    }
+
+    .drop-subtitle {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+    }
+
+    /* Feature Pills Horizontal */
+    .feature-pills {
+        display: flex;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .pill {
+        background: rgba(0, 243, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--primary);
+        font-size: 0.8rem;
+        padding: 6px 16px;
+    }
+
+    /* Helper Animations */
+    .status-widget {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(16, 185, 129, 0.1);
+        border-left: 2px solid var(--success);
+        padding: 6px 16px;
+        font-size: 0.8rem;
+        color: var(--success);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        margin-bottom: var(--space-lg);
+        backdrop-filter: blur(4px);
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--success);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--success);
+        animation: blink 2s infinite;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .upload-container {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .upload-hero {
+            height: auto;
+            overflow-y: auto;
+            padding: var(--space-md);
+        }
+
+        .hero-left {
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .hero-title,
+        .hero-subtitle {
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .feature-pills {
+            justify-content: center;
+        }
+    }
+
+    /* Reused Styles */
+    .scan-line {
+        /* ... existing scan styles ... */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        box-shadow: 0 0 15px var(--primary);
+        opacity: 0.7;
+        animation: scan 3s ease-in-out infinite;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    @keyframes scan {
+        0% {
+            top: 0;
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            top: 100%;
+            opacity: 0;
+        }
+    }
+
+    .upload-icon {
+        width: 80px;
+        height: 80px;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .upload-icon i {
+        font-size: 2.5rem;
+        color: var(--primary);
+    }
+
+    .corner {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border-color: var(--primary);
+        border-style: solid;
+        opacity: 0.5;
+    }
+
+    .corner-tl {
+        top: 0;
+        left: 0;
+        border-width: 2px 0 0 2px;
+    }
+
+    .corner-tr {
+        top: 0;
+        right: 0;
+        border-width: 2px 2px 0 0;
+    }
+
+    .corner-bl {
+        bottom: 0;
+        left: 0;
+        border-width: 0 0 2px 2px;
+    }
+
+    .corner-br {
+        bottom: 0;
+        right: 0;
+        border-width: 0 2px 2px 0;
+    }
+
+    .file-name {
+        color: var(--success);
+        font-family: monospace;
+        margin-top: 10px;
+        min-height: 1.2em;
+    }
+</style>
+
 {% block extra_js %}
 <script>
-    const form = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('fileInput');
-    const dropZone = document.getElementById('drop-zone');
-    const submitBtn = document.getElementById('submitBtn');
-    const dropContent = dropZone.querySelector('.drop-content');
-    const fileReady = document.getElementById('file-ready');
-    const fileName = document.getElementById('file-name');
-    const fileSize = document.getElementById('file-size');
-    const progressArea = document.getElementById('upload-progress');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('upload-form');
 
-    dropZone.onclick = () => fileInput.click();
+        // Safety check to prevent double-binding
+        if (form.getAttribute('data-bound')) return;
+        form.setAttribute('data-bound', 'true');
 
-    fileInput.onchange = (e) => {
-        if (e.target.files.length > 0) handleFile(e.target.files[0]);
-    };
+        const fileInput = document.getElementById('id_file');
+        const submitBtn = document.getElementById('submit-btn');
+        const dropZone = document.getElementById('drop-zone');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressText = document.getElementById('progress-text');
 
-    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = 'rgba(0,229,255,0.05)'; };
-    dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.style.background = 'transparent'; };
-    dropZone.ondrop = (e) => {
-        e.preventDefault();
-        dropZone.style.background = 'transparent';
-        if (e.dataTransfer.files.length > 0) {
-            fileInput.files = e.dataTransfer.files;
-            handleFile(e.dataTransfer.files[0]);
+        // --- File Selection Logic ---
+        function updateButtonState() {
+            if (fileInput.files && fileInput.files.length > 0) {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('btn-primary'); // Make sure it's bright
+
+                const fileNameEl = document.getElementById('file-name');
+                if (fileNameEl) {
+                    fileNameEl.textContent = `Target Acquired: ${fileInput.files[0].name}`;
+                    fileNameEl.style.color = 'var(--success)';
+                }
+            } else {
+                submitBtn.disabled = true;
+            }
         }
-    };
 
-    function handleFile(file) {
-        if (!file.name.endsWith('.csv')) {
-            showToast('S.H.I.E.L.D. Protocol Error: Only .CSV streams accepted', 'error');
-            return;
-        }
-        fileName.textContent = file.name;
-        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
-        dropContent.classList.add('hidden');
-        fileReady.classList.remove('hidden');
-        submitBtn.disabled = false;
-        showToast('Module detected. Ready for uplink.', 'info');
-    }
+        fileInput.addEventListener('change', updateButtonState);
 
-    function resetUpload() {
-        fileInput.value = '';
-        dropContent.classList.remove('hidden');
-        fileReady.classList.add('hidden');
-        submitBtn.disabled = true;
-    }
+        // Drag & Drop Visuals
+        ['dragenter', 'dragover'].forEach(e => {
+            dropZone.addEventListener(e, (evt) => {
+                evt.preventDefault();
+                dropZone.classList.add('drag-active');
+            });
+        });
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        submitBtn.disabled = true;
-        fileReady.classList.add('hidden');
-        progressArea.classList.remove('hidden');
+        ['dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, (evt) => {
+                evt.preventDefault();
+                dropZone.classList.remove('drag-active');
+            });
+        });
 
-        try {
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateButtonState();
+            }
+        });
+
+        // --- AJAX Upload Logic ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('No file selected.', 'warning');
+                return;
+            }
+
+            // UI Updates
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> UPLOADING...';
+            progressContainer.style.display = 'block';
+
+            // Create Form Data
+            const formData = new FormData(form);
+
+            // XHR Request
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', window.location.href, true);
+            xhr.open('POST', form.action || window.location.href, true);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-            xhr.upload.onprogress = (ev) => {
-                if (ev.lengthComputable) {
-                    const pct = (ev.loaded / ev.total) * 100;
-                    progressBar.style.width = pct + '%';
-                    progressText.textContent = `Transmitting: ${Math.round(pct)}%`;
+            // Progress
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressPercent.textContent = percentComplete + '%';
+
+                    if (percentComplete === 100) {
+                        progressText.textContent = 'PROCESSING...';
+                    }
                 }
             };
 
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    showToast('Uplink Complete. Redirecting to JARVIS...', 'success');
-                    window.location.reload();
+            // Complete
+            xhr.onload = function () {
+                if (xhr.status === 200 || xhr.status === 302) {
+                    // Success
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    progressText.textContent = 'COMPLETE';
+
+                    showToast('Upload Successful! Redirecting...', 'success');
+
+                    // Check if redirected URL is different, or parse response if it's HTML
+                    // Since it's a redirect, XHR follows it transparently. The responseURL will be the new page.
+                    const targetUrl = xhr.responseURL;
+
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 1000);
                 } else {
-                    showToast('Transmission Failed: Shield Override Detected', 'error');
-                    resetUpload();
-                    progressArea.classList.add('hidden');
+                    showToast('Upload Failed. Status: ' + xhr.status, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> ENGAGE PROTOCOLS';
+                    progressContainer.style.display = 'none';
                 }
+            };
+
+            xhr.onerror = function () {
+                showToast('Network Error', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> ENGAGE PROTOCOLS';
             };
 
             xhr.send(formData);
-        } catch (err) {
-            showToast('Signal Interference: Network error', 'error');
-            resetUpload();
-            progressArea.classList.add('hidden');
-        }
-    };
+        });
+    });
 </script>
 {% endblock %}
 {% endblock %}

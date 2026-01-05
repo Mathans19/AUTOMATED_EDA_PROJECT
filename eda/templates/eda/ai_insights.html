@@ -4,49 +4,40 @@
 
 {% block content %}
 <div class="app-container" style="padding-top: 0;">
-    <div class="glass-card holo-plate stark-card"
-        style="max-width: 1000px; margin: 0 auto; min-height: 85vh; display: flex; flex-direction: column; border-top: 3px solid var(--primary);">
+    <div class="glass-card"
+        style="max-width: 900px; margin: 0 auto; min-height: 80vh; display: flex; flex-direction: column;">
 
         <!-- Header -->
-        <div class="text-center mb-4" style="padding: 20px;">
+        <div class="text-center mb-4">
             <div style="
-                width: 70px; height: 70px; 
-                background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+                width: 60px; height: 60px; 
+                background: linear-gradient(135deg, var(--secondary), var(--primary)); 
                 border-radius: 50%; 
                 display:flex; align-items:center; justify-content:center; 
-                margin: 0 auto 1.5rem auto;
-                box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
-                border: 2px solid white;
+                margin: 0 auto 1rem auto;
+                box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
             ">
-                <i class="fa-solid fa-brain"
-                    style="font-size: 2rem; color: white; filter: drop-shadow(0 0 5px white);"></i>
+                <i class="fa-solid fa-brain" style="font-size: 1.8rem; color: white;"></i>
             </div>
-            <h1 class="wanda-text" style="font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px;">JARVIS
-                ORACLE</h1>
-            <p
-                style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 1.5rem auto; font-size: 0.9rem; letter-spacing: 0.5px;">
-                Advanced tactical analysis interface. Direct uplink to the Strategic Analytics Core.
+            <h1 style="font-size: 2rem;">AI Assistant</h1>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+                Ask questions about your dataset. Our AI analyzes your data structure to provide intelligent answers.
             </p>
-            <button onclick="generateCleaningPlan()" class="btn btn-primary thor-btn pulse-btn">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <span>DEPLOY STRATEGIC REFINEMENT PLAN</span>
-            </button>
         </div>
 
         <!-- Chat Container -->
-        <div id="chat-box" class="holo-plate" style="
+        <div id="chat-box" style="
             flex: 1; 
-            background: rgba(0,0,0,0.4); 
+            background: rgba(0,0,0,0.2); 
             border: 1px solid var(--glass-border); 
             border-radius: 12px; 
-            padding: 2rem; 
-            margin: 0 20px 1.5rem 20px; 
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem; 
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
             min-height: 400px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         ">
             <!-- Welcome Message -->
             <div class="message system">
@@ -57,11 +48,14 @@
             </div>
 
             <!-- Chat history will be appended here -->
-            {% for msg in chat_history %}
-            <div class="message {% if msg.role == 'user' %}user{% else %}system{% endif %}">
-                <div class="avatar"><i
-                        class="fa-solid fa-{% if msg.role == 'user' %}user{% else %}robot{% endif %}"></i></div>
-                <div class="bubble">{{ msg.content|linebreaksbr }}</div>
+            {% for chat in chat_history %}
+            <div class="message {% if chat.role == 'user' %}user{% else %}system{% endif %}">
+                <div class="avatar">
+                    <i class="fa-solid fa-{% if chat.role == 'user' %}user{% else %}robot{% endif %}"></i>
+                </div>
+                <div class="bubble">
+                    {{ chat.content|linebreaksbr }}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -150,30 +144,16 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function generateCleaningPlan() {
-        const btn = document.querySelector('.pulse-btn');
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Generating...';
-        btn.disabled = true;
-
-        sendMessage("Generate a recommended cleaning plan for this dataset.", true);
-
-        setTimeout(() => {
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        }, 3000);
-    }
-
-    function sendMessage(questionText = null, isCleaningPlan = false) {
+    function sendMessage() {
         const input = document.getElementById("user_input");
-        const question = questionText || input.value.trim();
+        const question = input.value.trim();
         const btn = document.querySelector('button[type="submit"]');
 
         if (!question) return;
 
         // Add user message
         appendMessage(question, "user");
-        if (!questionText) input.value = "";
+        input.value = "";
         btn.disabled = true;
 
         // Add loading indicator
@@ -194,10 +174,7 @@
                 "X-CSRFToken": "{{ csrf_token }}",
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                question: question,
-                is_cleaning_plan: isCleaningPlan
-            })
+            body: JSON.stringify({ question: question })
         })
             .then(response => response.json())
             .then(data => {

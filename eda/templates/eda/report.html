@@ -1,115 +1,245 @@
 {% extends 'eda/base.html' %}
-{% load static %}
 {% load eda_filters %}
 
 {% block title %}EDA Report - Automated Insights{% endblock %}
 
 {% block content %}
 <div class="report-workspace">
-    <!-- Header -->
-    <header class="report-header">
-        <div class="header-left">
-            <h1 class="wanda-text" style="font-size: 2.2rem;">MISSION SUMMARY: PROJECT TESSERACT</h1>
-            <p class="text-secondary" style="letter-spacing: 2px;">Status: Dataset structural analysis & integrity check
-                complete.</p>
+    <div class="report-container">
+        <!-- Report Header -->
+        <div class="report-header glass-card">
+            <div>
+                <h2 class="wanda-text"><i class="fa-solid fa-chart-line"></i> Exploratory Data Analysis Report</h2>
+                <p class="text-muted text-sm">Comprehensive data insights and statistics</p>
+            </div>
+            <div class="report-actions">
+                <a href="{% url 'clean_data' file_id=file_id %}" class="btn btn-secondary">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Clean Data</span>
+                </a>
+                <a href="{% url 'visualize_data' file_id=file_id %}" class="btn btn-primary thor-btn">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Visualize</span>
+                </a>
+            </div>
         </div>
-        <div class="header-actions">
-            <a href="{% url 'clean_data' file_id=file_id %}" class="btn btn-secondary stark-link">
-                <i class="fa-solid fa-vial-virus"></i>
-                <span>Refine Core</span>
-            </a>
-            <a href="{% url 'visualize_data' file_id=file_id %}" class="btn btn-primary thor-btn">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Invoke JARVIS</span>
-            </a>
-        </div>
-    </header>
 
-    <div class="report-grid">
-        <!-- Main Content -->
-        <div class="report-main">
-            <!-- Key Metrics -->
-            <section class="report-section glass-card holo-plate stark-card widow-border">
-                <h3 class="wanda-text hulk-pulse" style="font-size: 1.1rem;"><i class="fa-solid fa-gauge-high"></i> CORE
-                    POWER LEVELS</h3>
-                <div class="metrics-grid">
-                    <div class="metric-item" style="border-color: var(--primary);">
-                        <span class="metric-label">Node Count</span>
-                        <span class="metric-value">{{ dataset_info.total_rows|floatformat:0 }}</span>
+        <!-- Data Quality Alerts -->
+        {% if alerts %}
+        <div class="alerts-section">
+            {% for alert in alerts %}
+            <div class="alert alert-{{ alert.type }} glass-card">
+                <i
+                    class="fa-solid fa-{% if alert.type == 'error' %}exclamation-circle{% elif alert.type == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                <span>{{ alert.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Dataset Overview -->
+        <div class="overview-section glass-card collapsible" data-state="open">
+            <div class="collapsible-header" onclick="toggleSection(this)">
+                <div class="collapsible-title">
+                    <h3><i class="fa-solid fa-database"></i> Dataset Overview</h3>
+                </div>
+                <i class="fa-solid fa-chevron-up"></i>
+            </div>
+            <div class="collapsible-body">
+                <div class="stats-grid">
+                    <div class="stat-card widow-border">
+                        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.2);">
+                            <i class="fa-solid fa-table" style="color: #6366f1;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.total_rows|floatformat:0 }}</div>
+                            <div class="stat-label">Total Rows</div>
+                        </div>
                     </div>
-                    <div class="metric-item" style="border-color: var(--primary);">
-                        <span class="metric-label">Signal Channels</span>
-                        <span class="metric-value">{{ dataset_info.total_columns }}</span>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
+                            <i class="fa-solid fa-columns" style="color: #22c55e;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.total_columns }}</div>
+                            <div class="stat-label">Total Columns</div>
+                        </div>
                     </div>
-                    <div class="metric-item" style="border-color: var(--secondary);">
-                        <span class="metric-label">Signal Noise</span>
-                        <span class="metric-value">{{ dataset_info.total_missing }}</span>
-                        <span class="metric-meta">{{ dataset_info.missing_percentage|floatformat:1 }}%</span>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2);">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.total_missing }}</div>
+                            <div class="stat-label">Missing Values</div>
+                            <div class="stat-sublabel">{{ dataset_info.missing_percentage|floatformat:2 }}%</div>
+                        </div>
                     </div>
-                    <div class="metric-item" style="border-color: var(--accent);">
-                        <span class="metric-label">Redundancy</span>
-                        <span class="metric-value">{{ dataset_info.duplicate_rows }}</span>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
+                            <i class="fa-solid fa-copy" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.duplicate_rows }}</div>
+                            <div class="stat-label">Duplicate Rows</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
+                            <i class="fa-solid fa-hashtag" style="color: #3b82f6;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.numeric_columns }}</div>
+                            <div class="stat-label">Numeric Columns</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.2);">
+                            <i class="fa-solid fa-tags" style="color: #a855f7;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ dataset_info.categorical_columns }}</div>
+                            <div class="stat-label">Categorical Columns</div>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Column Inventory -->
-            <section class="report-section glass-card holo-plate widow-border">
-                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-table-list"></i> SIGNAL MANIFEST
-                </h3>
-                <div class="table-container" style="border-color: var(--primary);">
-                    <table class="table">
+                <div class="insight-chips">
+                    {% if dataset_info.missing_percentage > 0 %}
+                    <span class="insight-chip">
+                        <i class="fa-solid fa-droplet"></i>
+                        {{ dataset_info.missing_percentage|floatformat:1 }}% missing values overall
+                    </span>
+                    {% endif %}
+                    {% if dataset_info.duplicate_rows > 0 %}
+                    <span class="insight-chip">
+                        <i class="fa-solid fa-clone"></i>
+                        {{ dataset_info.duplicate_rows }} duplicate rows detected
+                    </span>
+                    {% endif %}
+                    {% if alerts %}
+                    <span class="insight-chip">
+                        <i class="fa-solid fa-bell"></i>
+                        {{ alerts|length }} data quality alerts
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Column Information -->
+        <div class="columns-section glass-card collapsible" data-state="open">
+            <div class="collapsible-header" onclick="toggleSection(this)">
+                <div class="collapsible-title">
+                    <h3><i class="fa-solid fa-list"></i> Column Information</h3>
+                </div>
+                <i class="fa-solid fa-chevron-up"></i>
+            </div>
+            <div class="collapsible-body">
+                <div class="columns-table-wrapper">
+                    <table class="columns-table">
                         <thead>
                             <tr>
-                                <th>IDENTIFIER</th>
-                                <th>TYPE</th>
-                                <th>NOISE</th>
-                                <th>UNIQUENESS</th>
-                                <th>RANGE (MIN - MAX)</th>
+                                <th>Column Name</th>
+                                <th>Data Type</th>
+                                <th>Missing</th>
+                                <th>Unique Values</th>
+                                {% if numeric_cols %}
+                                <th>Mean</th>
+                                <th>Median</th>
+                                <th>Std Dev</th>
+                                <th>Min</th>
+                                <th>Max</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for col in column_info %}
                             <tr>
-                                <td style="font-weight: 700; color: var(--primary);">{{ col.name }}</td>
-                                <td><span class="type-badge" style="background: var(--iron-red); color: white;">{{
-                                        col.dtype }}</span></td>
+                                <td><strong>{{ col.name }}</strong></td>
+                                <td><span class="badge badge-{{ col.dtype|slice:':3' }}">{{ col.dtype }}</span></td>
                                 <td>
-                                    <span
-                                        class="{% if col.missing_count > 0 %}text-warning{% else %}text-muted{% endif %}">
-                                        {{ col.missing_count }} ({{ col.missing_percentage|floatformat:1 }}%)
-                                    </span>
+                                    {% if col.missing_count > 0 %}
+                                    <span class="text-warning">{{ col.missing_count }} ({{ col.missing_percentage
+                                        }}%)</span>
+                                    {% else %}
+                                    <span class="text-success">0</span>
+                                    {% endif %}
                                 </td>
-                                <td>{{ col.unique_count }}</td>
-                                <td class="text-sm">
-                                    {% if col.min is not None %}
-                                    {{ col.min|floatformat:2 }} &mdash; {{ col.max|floatformat:2 }}
-                                    {% else %}&mdash;{% endif %}
-                                </td>
+                                <td>{{ col.unique_count }} ({{ col.unique_percentage }}%)</td>
+                                {% if col.name in numeric_cols %}
+                                <td>{{ col.mean|default:"N/A" }}</td>
+                                <td>{{ col.median|default:"N/A" }}</td>
+                                <td>{{ col.std|default:"N/A" }}</td>
+                                <td>{{ col.min|default:"N/A" }}</td>
+                                <td>{{ col.max|default:"N/A" }}</td>
+                                {% else %}
+                                <td colspan="5" class="text-muted">-</td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- Correlation -->
-            {% if correlation_matrix and numeric_cols|length > 1 %}
-            <section class="report-section glass-card holo-plate stark-card widow-border">
-                <h3 class="wanda-text" style="font-size: 1.1rem;"><i class="fa-solid fa-circle-nodes"></i> LINKAGE
-                    ANALYSIS</h3>
-                <div id="correlation-chart" style="width: 100%; min-height: 400px; padding: var(--space-16);"></div>
-            </section>
-            {% endif %}
+        <!-- Missing Values Analysis -->
+        {% if missing_analysis %}
+        <div class="missing-section glass-card collapsible" data-state="open">
+            <div class="collapsible-header" onclick="toggleSection(this)">
+                <div class="collapsible-title">
+                    <h3><i class="fa-solid fa-exclamation-triangle"></i> Missing Values Analysis</h3>
+                </div>
+                <i class="fa-solid fa-chevron-up"></i>
+            </div>
+            <div class="collapsible-body">
+                <div class="missing-list">
+                    {% for col, info in missing_analysis.items %}
+                    <div class="missing-item">
+                        <div class="missing-col-name">{{ col }}</div>
+                        <div class="missing-bar-wrapper">
+                            <div class="missing-bar {% if info.percentage > 50 %}bar-critical{% elif info.percentage > 25 %}bar-warning{% else %}bar-normal{% endif %}"
+                                style="--width: {{ info.percentage|default:0 }}%; width: var(--width);">
+                            </div>
+                        </div>
+                        <div class="missing-stats">{{ info.count }} ({{ info.percentage }}%)</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
-            <!-- Data Preview -->
-            <section class="report-section glass-card holo-plate">
-                <h3 class="wanda-text"><i class="fa-solid fa-list-check"></i> RAW DATA STREAM</h3>
-                <div class="table-container" style="border-color: var(--primary);">
-                    <table class="table">
+        <!-- Correlation Matrix -->
+        {% if correlation_matrix and numeric_cols|length > 1 %}
+        <div class="correlation-section glass-card collapsible" data-state="open">
+            <div class="collapsible-header" onclick="toggleSection(this)">
+                <div class="collapsible-title">
+                    <h3><i class="fa-solid fa-project-diagram"></i> Correlation Matrix</h3>
+                </div>
+                <i class="fa-solid fa-chevron-up"></i>
+            </div>
+            <div class="collapsible-body">
+                <div id="correlation-chart" style="min-height: 400px;"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sample Data -->
+        <div class="sample-section glass-card collapsible" data-state="open">
+            <div class="collapsible-header" onclick="toggleSection(this)">
+                <div class="collapsible-title">
+                    <h3><i class="fa-solid fa-eye"></i> Sample Data (First 10 Rows)</h3>
+                </div>
+                <i class="fa-solid fa-chevron-up"></i>
+            </div>
+            <div class="collapsible-body">
+                <div class="sample-table-wrapper">
+                    <table class="sample-table">
                         <thead>
                             <tr>
-                                {% for col in column_info|slice:":8" %}
+                                {% for col in column_info|slice:":15" %}
                                 <th>{{ col.name }}</th>
                                 {% endfor %}
                             </tr>
@@ -117,265 +247,306 @@
                         <tbody>
                             {% for row in sample_data %}
                             <tr>
-                                {% for col in column_info|slice:":8" %}
-                                <td class="text-sm">{{ row|get_item:col.name|default:"-" }}</td>
+                                {% for col in column_info|slice:":15" %}
+                                <td>
+                                    {% if col.name in row %}
+                                    {% if row|get_item:col.name %}
+                                    {{ row|get_item:col.name|truncatechars:30 }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </div>
         </div>
-
-        <!-- Sidebar -->
-        <aside class="report-sidebar">
-            <div class="glass-card stark-card">
-                <h3 class="wanda-text"><i class="fa-solid fa-clock-rotate-left"></i> LOG HISTORY</h3>
-                <div class="history-timeline">
-                    {% for v in versions %}
-                    <div class="history-item {% if v.version_number == current_version %}active{% endif %}">
-                        <div class="history-marker" style="border-color: var(--primary);"></div>
-                        <div class="history-info">
-                            <span class="version-num" style="color: var(--accent);">PROTOCOL v{{ v.version_number
-                                }}</span>
-                            <span class="version-desc">{{ v.action_taken }}</span>
-                            <span class="version-date">{{ v.created_at|timesince }} ago</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            {% if alerts %}
-            <div class="glass-card holo-plate" style="margin-top: var(--space-24); border-color: var(--secondary);">
-                <h3 class="wanda-text"><i class="fa-solid fa-circle-exclamation"></i> DEPLOYMENT ALERTS</h3>
-                <div class="alerts-list">
-                    {% for alert in alerts %}
-                    <div class="alert-box alert-{{ alert.type }}"
-                        style="background: rgba(230,33,23,0.1); border-left: 3px solid var(--secondary);">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>{{ alert.message }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-        </aside>
     </div>
 </div>
 
 <style>
     .report-workspace {
+        padding: var(--space-xl);
+    }
+
+    .report-container {
         display: flex;
         flex-direction: column;
-        gap: var(--space-32);
+        gap: var(--space-xl);
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .report-header {
+        padding: var(--space-xl);
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
+        align-items: center;
     }
 
-    .header-actions {
-        display: flex;
-        gap: var(--space-12);
-    }
-
-    .report-grid {
-        display: grid;
-        grid-template-columns: 1fr 320px;
-        gap: var(--space-32);
-        align-items: start;
-    }
-
-    .report-main {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-32);
-    }
-
-    .report-section h3 {
-        margin-bottom: var(--space-24);
-        color: var(--text-primary);
-        font-size: 16px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+    .report-header h2 {
+        margin: 0;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: var(--space-sm);
     }
 
-    .report-section h3 i {
-        color: var(--primary);
-        font-size: 14px;
+    .report-actions {
+        display: flex;
+        gap: var(--space-sm);
     }
 
-    /* Metrics */
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--space-16);
-    }
-
-    .metric-item {
+    .alerts-section {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding: var(--space-16);
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 6px;
-        border: 1px solid var(--glass-border);
+        gap: var(--space-sm);
     }
 
-    .metric-label {
-        font-size: 12px;
-        color: var(--text-muted);
-        font-weight: 500;
-        text-transform: uppercase;
-    }
-
-    .metric-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Outfit', sans-serif;
-    }
-
-    .metric-meta {
-        font-size: 12px;
-        color: var(--danger);
-        font-weight: 600;
-    }
-
-    /* Badges */
-    .type-badge {
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        background: var(--primary-muted);
-        color: var(--primary);
-        text-transform: uppercase;
-    }
-
-    /* Sidebar / Timeline */
-    .history-timeline {
+    .alert {
+        padding: var(--space-md);
         display: flex;
-        flex-direction: column;
-        gap: var(--space-24);
-        position: relative;
-        padding-left: 14px;
-    }
-
-    .history-timeline::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: var(--glass-border);
-    }
-
-    .history-item {
-        position: relative;
-        display: flex;
-        gap: 16px;
-    }
-
-    .history-marker {
-        position: absolute;
-        left: -18px;
-        top: 4px;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--bg-surface);
-        border: 2px solid var(--glass-border);
-        transition: var(--transition);
-    }
-
-    .history-item.active .history-marker {
-        background: var(--primary);
-        border-color: var(--primary);
-        box-shadow: 0 0 8px var(--primary);
-    }
-
-    .history-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .version-num {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--primary);
-    }
-
-    .version-desc {
-        font-size: 14px;
-        color: var(--text-secondary);
-    }
-
-    .version-date {
-        font-size: 11px;
-        color: var(--text-muted);
-    }
-
-    /* Alerts */
-    .alerts-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .alert-box {
-        padding: 12px;
-        border-radius: 6px;
-        font-size: 13px;
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        line-height: 1.4;
-    }
-
-    .alert-warning {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        align-items: center;
+        gap: var(--space-sm);
+        border-left: 4px solid;
     }
 
     .alert-error {
+        border-color: #ef4444;
         background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-        border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
-    .text-sm {
-        font-size: 13px;
+    .alert-warning {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
     }
 
-    .text-warning {
-        color: var(--warning);
+    .alert-info {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
     }
 
-    .text-success {
-        color: var(--success);
+    .overview-section,
+    .columns-section,
+    .missing-section,
+    .correlation-section,
+    .sample-section {
+        padding: var(--space-xl);
     }
 
-    @media (max-width: 1024px) {
-        .report-grid {
+    .collapsible {
+        overflow: hidden;
+        transition: all var(--transition-base);
+    }
+
+    .collapsible-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding-bottom: var(--space-md);
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .collapsible-body {
+        padding-top: var(--space-md);
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    .insight-chips {
+        margin-top: var(--space-md);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .insight-chip {
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .overview-section h3,
+    .columns-section h3,
+    .missing-section h3,
+    .correlation-section h3,
+    .sample-section h3 {
+        margin: 0 0 var(--space-xl) 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-lg);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon i {
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .stat-sublabel {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .columns-table-wrapper,
+    .sample-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .columns-table,
+    .sample-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .columns-table th,
+    .sample-table th {
+        padding: var(--space-md);
+        text-align: left;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 2px solid var(--glass-border);
+        font-weight: 600;
+    }
+
+    .columns-table td,
+    .sample-table td {
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .badge {
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .missing-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .missing-item {
+        display: grid;
+        grid-template-columns: 200px 1fr 120px;
+        gap: var(--space-md);
+        align-items: center;
+    }
+
+    .missing-col-name {
+        font-weight: 600;
+    }
+
+    .missing-bar-wrapper {
+        height: 24px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+    }
+
+    .missing-bar {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .bar-critical {
+        background-color: #ef4444;
+    }
+
+    .bar-warning {
+        background-color: #f59e0b;
+    }
+
+    .bar-normal {
+        background-color: #3b82f6;
+    }
+
+    .missing-stats {
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
             grid-template-columns: 1fr;
         }
 
-        .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .missing-item {
+            grid-template-columns: 1fr;
         }
     }
 </style>
+
+<script>
+    function toggleSection(headerEl) {
+        const card = headerEl.closest(".collapsible");
+        const body = card.querySelector(".collapsible-body");
+        const icon = headerEl.querySelector("i.fa-chevron-up, i.fa-chevron-down");
+
+        const isOpen = card.dataset.state !== "closed";
+        if (isOpen) {
+            body.style.display = "none";
+            card.dataset.state = "closed";
+            if (icon) {
+                icon.classList.remove("fa-chevron-up");
+                icon.classList.add("fa-chevron-down");
+            }
+        } else {
+            body.style.display = "block";
+            card.dataset.state = "open";
+            if (icon) {
+                icon.classList.remove("fa-chevron-down");
+                icon.classList.add("fa-chevron-up");
+            }
+        }
+    }
+</script>
 
 {% if correlation_matrix and numeric_cols|length > 1 %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

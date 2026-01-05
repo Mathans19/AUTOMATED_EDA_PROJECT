@@ -1,235 +1,231 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DataInsight Pro{% endblock %}</title>
+    <title>{% block title %}Automated Insights{% endblock %}</title>
 
     <!-- Fonts: Outfit (Headings) & Inter (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Plotly.js for Visualizations -->
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js" charset="utf-8"></script>
 
+    <!-- Inline CSS - Complete Design System -->
     <style>
         /* =========================================
-           AVENGERS DATA HUB - THEMED DESIGN SYSTEM
+           AVENGERS CINEMATIC UI - DESIGN SYSTEM
+           Futuristic Data Intelligence Platform
            ========================================= */
+
         :root {
-            --bg-primary: #05070a;
-            --bg-secondary: #0a0d14;
-            --bg-surface: #10141d;
-            --primary: #00e5ff;
-            /* S.H.I.E.L.D. Blue */
-            --secondary: #e62117;
+            /* --- Cinematic Color Palette --- */
+            --bg-primary: #050505;
+            /* Deep Space Black */
+            --bg-secondary: #0a0e14;
+            /* Dark Metallic */
+            --bg-tertiary: #121826;
+            /* Panel Background */
+            --bg-elevated: #161b22;
+            /* Card Background */
+
+            /* Glass & HUD Overlays */
+            --glass-bg: rgba(10, 14, 20, 0.75);
+            --glass-border: rgba(0, 243, 255, 0.15);
+            /* Subtle Cyan Edge */
+            --glass-highlight: rgba(0, 243, 255, 0.05);
+
+            /* Neon Accents */
+            --primary: #00f3ff;
+            /* Arc Reactor Cyan */
+            --primary-light: #6affff;
+            --primary-dark: #0099aa;
+            --primary-glow: rgba(0, 243, 255, 0.4);
+
+            --secondary: #e11d48;
             /* Stark Red */
-            --accent: #f2c94c;
-            /* Stark Gold */
-            --success: #4ade80;
-            /* Hulk Green */
-            --warning: #fbbf24;
-            --danger: #f87171;
+            --secondary-light: #fb7185;
+            --secondary-glow: rgba(225, 29, 72, 0.4);
+
+            --accent: #8b5cf6;
+            /* Quantum Purple */
+            --accent-light: #a78bfa;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+
+            /* Semantic Colors (Cinematic) */
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --info: #0ea5e9;
+            --info-bg: rgba(14, 165, 233, 0.1);
+
+            /* Typography */
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --glass-border: rgba(0, 229, 255, 0.2);
-            --iron-red: #e62117;
-            --iron-gold: #f2c94c;
-            --space-4: 4px;
-            --space-8: 8px;
-            --space-12: 12px;
-            --space-16: 16px;
-            --space-24: 24px;
-            --space-32: 32px;
-            --space-48: 48px;
-            --space-64: 64px;
-            --transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            --radius: 12px;
+            --text-disabled: #475569;
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            --gradient-secondary: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            --gradient-dark: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(10, 14, 20, 0.95) 100%);
+            --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+            --gradient-glow: radial-gradient(circle at top, rgba(0, 243, 255, 0.15) 0%, transparent 70%);
+
+            /* Shadows & Depth */
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.7);
+            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--glass-border);
+            --shadow-glow-primary: 0 0 20px var(--primary-glow);
+            --shadow-glow-secondary: 0 0 20px var(--secondary-glow);
+
+            /* Spacing Scale */
+            --space-xs: 0.5rem;
+            --space-sm: 0.75rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            --space-3xl: 4rem;
+
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            /* Sharper edges for tech look */
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-base: 300ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* 🟢 1. CUSTOM CURSOR: Vibranium Shield */
-        * {
+        /* --- Reset & Base --- */
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            cursor: url('{% static "eda/images/shield_cursor.png" %}'),
-            auto;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #02040a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
             font-size: 15px;
-            /* 🟢 2. HUD BACKGROUND ALIGNMENT */
-            background-image: url('{% static "eda/images/stark_hud.png" %}');
-            background-repeat: no-repeat;
-            background-position: center top;
-            background-size: cover;
-            background-attachment: fixed;
             min-height: 100vh;
             overflow-x: hidden;
-        }
 
-        h1,
-        h2,
-        h3 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
+            /* Stark Tech HUD Background */
+            background-image: url('/media/stark_hud.png');
+            background-size: cover;
+            background-position: center 20%;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
 
-        /* 🟢 3. SCARLET WITCH: Wanda Glitch Effect */
-        .wanda-text {
-            color: white;
             position: relative;
-            text-shadow: 0 0 10px rgba(230, 33, 23, 0.8);
-            animation: wanda-glitch 4s infinite;
-            text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
-        @keyframes wanda-glitch {
-
-            0%,
-            90%,
-            100% {
-                transform: none;
-                opacity: 1;
-            }
-
-            91% {
-                transform: skewX(-10deg);
-                color: #0eceff;
-            }
-
-            92% {
-                transform: skewX(10deg);
-                color: #ff003c;
-                opacity: 0.8;
-            }
-
-            95% {
-                transform: skewY(2deg);
-            }
-        }
-
-        /* 🟢 4. THOR: Mjolnir Lightning Strike */
-        .thor-btn {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--primary), #0088ff);
-            border: none;
-            transition: all 0.2s ease;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .thor-btn::after {
+        body::before {
             content: '';
-            position: absolute;
-            top: -50%;
-            left: -150%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-            transform: rotate(45deg);
-        }
-
-        .thor-btn:hover::after {
-            left: 150%;
-            transition: 0.4s ease-in-out;
-        }
-
-        .thor-btn:hover {
-            box-shadow: 0 0 25px var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* 🟢 5. BLACK WIDOW: Widow's Bite Border */
-        .widow-border {
-            border-left: 4px solid var(--iron-red) !important;
-            padding-left: var(--space-16);
-            background: rgba(230, 33, 23, 0.03);
-        }
-
-        /* 🟢 6. THE HULK: Gamma Pulse Success */
-        .hulk-pulse {
-            animation: gamma-pulse 2s infinite;
-        }
-
-        @keyframes gamma-pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 15px rgba(74, 222, 128, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
-            }
-        }
-
-        /* 🟢 7. DOCTOR STRANGE: Mystic Portal Spinners */
-        .strange-spinner {
-            animation: mystic-spin 1.5s linear infinite;
-            color: #ff9d00 !important;
-            filter: drop-shadow(0 0 5px #ff4e00);
-        }
-
-        @keyframes mystic-spin {
-            0% {
-                transform: rotate(0deg) scale(1);
-                filter: hue-rotate(0deg);
-            }
-
-            50% {
-                transform: rotate(180deg) scale(1.2);
-            }
-
-            100% {
-                transform: rotate(360deg) scale(1);
-                filter: hue-rotate(45deg);
-            }
-        }
-
-        /* Holographic Structural Components */
-        .stark-card {
-            background: rgba(10, 13, 20, 0.7) !important;
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border) !important;
-            border-top: 3px solid var(--primary) !important;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        .holo-plate {
-            background: rgba(0, 229, 255, 0.05);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .holo-plate::before {
-            content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: repeating-linear-gradient(0deg, transparent, rgba(0, 229, 255, 0.03) 2px, transparent 4px);
+            background: rgba(0, 0, 0, 0.6);
+            /* Darken the image slightly for readability */
+            z-index: -2;
+        }
+
+
+        #bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
             pointer-events: none;
         }
 
+        /* --- Typography --- */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.02em;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            text-transform: uppercase;
+            margin-bottom: var(--space-lg);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: var(--space-md);
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: var(--space-md);
+        }
+
+        p {
+            margin-bottom: var(--space-md);
+            color: var(--text-secondary);
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        a:hover {
+            color: var(--primary-light);
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        /* --- Layout --- */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -238,19 +234,66 @@
 
         .main-content {
             flex: 1;
-            padding: var(--space-32);
-            max-width: 1500px;
+            padding: var(--space-xl);
+            max-width: 1600px;
             margin: 0 auto;
             width: 100%;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        /* Navbar */
-        .navbar {
-            background: rgba(5, 7, 10, 0.9);
-            backdrop-filter: blur(15px);
+        /* --- Premium Card System (HUD Style) --- */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(0, 243, 255, 0.3);
+            /* Top highlight */
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-base);
+        }
+
+        /* Corner accents for HUD look */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border-top: 2px solid var(--primary);
+            border-left: 2px solid var(--primary);
+            border-radius: 4px 0 0 0;
+            opacity: 0.5;
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
             border-bottom: 2px solid var(--primary);
-            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.15);
-            padding: var(--space-16) var(--space-48);
+            border-right: 2px solid var(--primary);
+            border-radius: 0 0 4px 0;
+            opacity: 0.5;
+        }
+
+        .glass-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: var(--space-md) var(--space-xl);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -262,328 +305,854 @@
         .nav-brand {
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            font-size: 24px;
+            font-size: 1.6rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            gap: var(--space-sm);
+            letter-spacing: 0.05em;
         }
 
         .brand-icon {
             color: var(--primary);
-            filter: drop-shadow(0 0 8px var(--primary));
-            font-size: 28px;
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        .brand-text {
+            color: white;
         }
 
         .nav-links {
             display: flex;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px;
-            border-radius: 30px;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: var(--radius-md);
             border: 1px solid var(--glass-border);
         }
 
         .nav-item {
-            padding: 8px 20px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
             font-weight: 600;
-            font-size: 13px;
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
+            transition: all var(--transition-fast);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             display: flex;
             align-items: center;
-            gap: 10px;
-            text-transform: uppercase;
+            gap: 8px;
         }
 
-        .nav-item:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
+        .nav-item:hover,
         .nav-item.active {
-            color: white;
+            color: var(--bg-primary);
             background: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+            box-shadow: 0 0 16px var(--primary-glow);
         }
 
-        /* Buttons */
+        /* --- Buttons (Stark Tech Style) --- */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
             font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: var(--transition);
-            gap: 10px;
-            border: none;
-            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-size: 0.95rem;
         }
 
         .btn-primary {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            box-shadow: inset 0 0 12px rgba(0, 243, 255, 0.1);
+        }
+
+        .btn-primary:hover:not(:disabled) {
             background: var(--primary);
-            color: var(--bg-primary);
-            box-shadow: 0 4px 12px rgba(0, 229, 255, 0.2);
+            color: #000;
+            box-shadow: 0 0 24px var(--primary-glow);
         }
 
-        .btn-primary:hover {
-            background: #4defff;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 229, 255, 0.4);
+        .btn-accent {
+            background: transparent;
+            color: var(--success);
+            border: 1px solid var(--success);
         }
 
-        /* Hero Buttons */
-        .thor-btn {
-            background: linear-gradient(135deg, #004b8d, var(--primary)) !important;
-            color: white !important;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .thor-btn::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            opacity: 0;
-            transition: 0.5s;
-        }
-
-        .thor-btn:hover::before {
-            opacity: 1;
-        }
-
-        .hulk-btn {
+        .btn-accent:hover:not(:disabled) {
             background: var(--success);
-            color: #052e16;
-            animation: hulk-pulse 2s infinite;
-        }
-
-        @keyframes hulk-pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(74, 222, 128, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
-            }
+            color: #000;
+            box-shadow: 0 0 24px var(--success-glow);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--text-disabled);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary);
-        }
-
-        /* Glass Card */
-        .glass-card {
-            background: rgba(16, 20, 29, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .table-container {
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .table th {
-            background: rgba(0, 229, 255, 0.05);
-            color: var(--primary);
-            padding: 16px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid var(--primary);
-        }
-
-        .table td {
-            padding: 16px;
-            border-bottom: 1px solid var(--glass-border);
-            color: var(--text-secondary);
-        }
-
-        /* Toast */
-        .toast {
-            background: var(--bg-surface);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 280px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-        }
-
-        /* 🟢 20. CUSTOM SCROLLBAR: Avengers Theme */
-        ::-webkit-scrollbar {
-            width: 8px;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--iron-red), var(--primary));
-            border-radius: 10px;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
-        }
-
-        /* Utility */
-        .flex {
-            display: flex;
-        }
-
-        .gap-16 {
-            gap: 16px;
+            border-color: var(--text-primary);
+            color: var(--text-primary);
         }
 
         .w-full {
             width: 100%;
         }
 
+        .btn-lg {
+            padding: var(--space-md) var(--space-xl);
+            font-size: 1.1rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- Forms --- */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--space-xs);
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            transition: all var(--transition-fast);
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        input[type="file"] {
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            width: 100%;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        /* --- Tables --- */
+        .table-container {
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: rgba(0, 243, 255, 0.05);
+            color: var(--primary);
+            padding: 16px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* --- Utilities --- */
         .text-center {
             text-align: center;
         }
 
-        .hidden {
-            display: none;
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .text-highlight {
+            color: var(--primary);
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-xl);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-xl);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        /* --- Toast Notifications (Holographic) --- */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(10, 14, 20, 0.9);
+            border: 1px solid var(--glass-border);
+            border-left: 3px solid var(--primary);
+            padding: 16px;
+            min-width: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: var(--radius-sm);
+        }
+
+        .toast-success {
+            border-left-color: var(--success);
+        }
+
+        .toast-error {
+            border-left-color: var(--danger);
+        }
+
+        .toast-warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .toast-close:hover {
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: var(--space-sm);
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .nav-links span {
+                display: none;
+            }
+        }
+
+        /* --- Batch 2: Advanced UI Enhancements --- */
+
+        /* --- Avengers UI Overhaul (Force Fix v2) --- */
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        /* 1. Normal Cursor & Background Fix */
+        body {
+            cursor: auto;
+            background-image: url('/media/stark_hud.png');
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-color: #050510;
+            /* Dark fallback matches HUD */
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        button,
+        a,
+        .btn,
+        input,
+        select,
+        .clickable {
+            cursor: pointer !important;
+        }
+
+        /* 2. Scarlet Witch (Wanda) - Chaos Magic Text */
+        .wanda-text,
+        h1,
+        .hero-title {
+            animation: wandaGlow 3s infinite alternate !important;
+            position: relative;
+        }
+
+        @keyframes wandaGlow {
+            0% {
+                text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+            }
+
+            5% {
+                text-shadow: 2px 0 10px rgba(0, 243, 255, 0.6);
+            }
+
+            100% {
+                text-shadow: 0 0 20px rgba(255, 0, 85, 0.9), 2px 2px 0px rgba(0, 243, 255, 0.3);
+            }
+        }
+
+        /* 3. Thor - Mjolnir Strike Buttons */
+        .btn-primary,
+        .thor-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary::after,
+        .thor-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+            transform: skewX(-25deg);
+            z-index: 2;
+        }
+
+        .btn-primary:hover::after,
+        .thor-btn:hover::after {
+            left: 150%;
+            transition: 0.6s ease-in-out;
+        }
+
+        .btn-primary:hover,
+        .thor-btn:hover {
+            box-shadow: 0 0 25px var(--primary), 0 0 10px #fff !important;
+            border-color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        /* 4. Hulk - Gamma Pulse (Success States) */
+        .badge-success,
+        .status-widget,
+        .hulk-pulse {
+            animation: hulkPulse 3s infinite !important;
+        }
+
+        @keyframes hulkPulse {
+            0% {
+                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.9);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+        }
+
+
+        /* 5. Black Widow - Widow's Bite (Red Accents) */
+        .widow-border {
+            border-left: 3px solid #ff003c !important;
+        }
+
+        hr,
+        .divider {
+            border-color: rgba(255, 0, 60, 0.3);
+            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+        }
+
+        /* 6. Doctor Strange - Eye of Agamotto (Spinners) */
+        .animate-spin,
+        .fa-circle-notch,
+        .strange-spinner {
+            color: #ffaa00 !important;
+            /* Mystic Orange */
+            filter: drop-shadow(0 0 5px #ffaa00) !important;
+            animation: spin 1s linear infinite !important;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 7. Hawkeye - Precision Focus */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #a855f7 !important;
+            /* Hawkeye Purple */
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
+        }
+
+
+        /* 2. System Stats Widget */
+        #system-stats {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--text-disabled);
+            border-bottom: 2px solid var(--primary);
+            padding: 5px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: var(--primary);
+            z-index: 9999;
+            display: flex;
+            gap: 15px;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 3. Holographic Projection Effect (Visualize) */
+        .holo-plate {
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .holo-plate::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 5%;
+            width: 90%;
+            height: 20px;
+            background: radial-gradient(ellipse at center, rgba(0, 243, 255, 0.4) 0%, transparent 70%);
+            transform: perspective(500px) rotateX(60deg);
+            z-index: -1;
+            filter: blur(10px);
+            animation: holoPulse 4s infinite ease-in-out;
+        }
+
+        @keyframes holoPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: perspective(500px) rotateX(60deg) scale(0.9);
+            }
+
+            50% {
+                opacity: 1;
+                transform: perspective(500px) rotateX(60deg) scale(1.1);
+            }
+        }
+
+        /* 4. Terminal Log (Clean Data) */
+        .terminal-window {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 10px;
+            color: #58a6ff;
+            font-size: 0.8rem;
+            height: 150px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            margin-top: var(--space-lg);
+            position: relative;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            animation: typing 0.5s steps(40, end);
+        }
+
+        .terminal-prefix {
+            color: #238636;
+            margin-right: 8px;
+        }
+
+        .terminal-time {
+            color: #8b949e;
+            margin-right: 8px;
+            font-size: 0.7rem;
+        }
+
+        /* Decrypt Text Animation Class */
+        .decrypting {
+            display: inline-block;
+            min-width: 1ch;
         }
     </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
+    <canvas id="bg-particles"></canvas>
     <div class="app-container">
+        <!-- Floating Navbar -->
         <nav class="navbar">
             <div class="nav-brand">
-                <i class="fa-solid fa-shield-halved brand-icon hulk-pulse" style="color: var(--primary);"></i>
-                <span class="wanda-text" style="font-size: 1.4rem;">STARK COMMAND</span>
+                <i class="fa-solid fa-layer-group brand-icon"></i>
+                <span class="brand-text">DataInsight<span style="color:var(--primary)">Pro</span></span>
             </div>
 
             <div class="nav-links">
                 <a href="{% url 'upload' %}"
                     class="nav-item {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
-                    <i class="fa-solid fa-satellite-dish"></i> <span>TESSERACT</span>
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload</span>
                 </a>
+
                 {% if file_id %}
+                <div style="width:1px; height:20px; background:var(--glass-border); margin:0 5px;"></div>
+
                 <a href="{% url 'eda_report' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'eda_report' %}active{% endif %}">
-                    <i class="fa-solid fa-file-shield"></i> <span>DASHBOARD</span>
+                    <i class="fa-solid fa-file-invoice"></i> <span>Report</span>
                 </a>
                 <a href="{% url 'clean_data' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'clean_data' %}active{% endif %}">
-                    <i class="fa-solid fa-vial-virus"></i> <span>REFINE</span>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Clean</span>
                 </a>
                 <a href="{% url 'visualize_data' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'visualize_data' %}active{% endif %}">
-                    <i class="fa-solid fa-chart-pie"></i> <span>JARVIS</span>
+                    <i class="fa-solid fa-chart-pie"></i> <span>Visualize</span>
                 </a>
                 <a href="{% url 'ask_ai' file_id=file_id %}"
                     class="nav-item {% if request.resolver_match.url_name == 'ask_ai' %}active{% endif %}">
-                    <i class="fa-solid fa-brain"></i> <span>ORACLE</span>
+                    <i class="fa-solid fa-brain"></i> <span>AI Insights</span>
                 </a>
                 {% endif %}
             </div>
 
             <div class="nav-actions">
-                <a href="#" class="btn btn-secondary stark-link" style="padding: 8px 12px;"><i
-                        class="fa-brands fa-github"></i></a>
+                <a href="https://github.com/your-repo" target="_blank" class="btn btn-secondary"
+                    style="padding: 0.5rem 0.8rem;">
+                    <i class="fa-brands fa-github"></i>
+                </a>
             </div>
         </nav>
 
+        <!-- Main Content -->
         <main class="main-content">
-            {% block content %}{% endblock %}
+            {% block content %}
+            {% endblock %}
         </main>
 
-        <footer
-            style="text-align: center; padding: var(--space-48) var(--space-32); color: var(--text-muted); font-size: 13px; border-top: 2px solid var(--glass-border);">
-            &copy; 2026 STARK INDUSTRIES • GLOBAL DEFENSE & DATA INITIATIVE
+        <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+            &copy; 2026 DataInsightPro. Built for Data Science.
         </footer>
     </div>
 
-    <div id="toast-container"></div>
+    <div id="system-stats">
+        <span><i class="fa-solid fa-microchip"></i> CPU: OPTIMAL</span>
+        <span><i class="fa-solid fa-memory"></i> MEM: STABLE</span>
+        <span id="latency-stat"><i class="fa-solid fa-network-wired"></i> PING: --ms</span>
+    </div>
 
+    <!-- Inline JavaScript - UI Interactions -->
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('UI Scripts Loaded - Initializing Avenger Systems');
+            initParticles();
+            initTiltEffect();
+            initSystemStats();
+        });
+
+        // --- System Stats Simulator ---
+        function initSystemStats() {
+            const latencyEl = document.getElementById('latency-stat');
+            setInterval(() => {
+                const ms = Math.floor(Math.random() * 20) + 10;
+                latencyEl.innerHTML = `<i class="fa-solid fa-network-wired"></i> PING: ${ms}ms`;
+            }, 2000);
+        }
+
+
+
+
+        // --- Particle System ---
+        function initParticles() {
+            const canvas = document.getElementById('bg-particles');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            let w, h, particles;
+
+            const resize = () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0) this.x = w;
+                    if (this.x > w) this.x = 0;
+                    if (this.y < 0) this.y = h;
+                    if (this.y > h) this.y = 0;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(0, 243, 255, ${Math.random() * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            particles = Array.from({ length: 50 }, () => new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                // Connect particles
+                particles.forEach((p1, i) => {
+                    particles.slice(i + 1).forEach(p2 => {
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 100) {
+                            ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 - dist / 1000})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // --- 3D Tilt Effect ---
+        function initTiltEffect() {
+            const cards = document.querySelectorAll('.tilt-card');
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+
+                    const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg tilt
+                    const rotateY = ((x - centerX) / centerX) * 5;
+
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+                });
+            });
+        }
+
+
+        // --- Toast Notification System ---
         function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
+            // Create container if it doesn't exist
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            // Create Toast
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
 
+            // Icon selection
             let icon = 'fa-info-circle';
             let color = 'var(--primary)';
             if (type === 'success') { icon = 'fa-check-circle'; color = 'var(--success)'; }
             if (type === 'error') { icon = 'fa-exclamation-circle'; color = 'var(--danger)'; }
+            if (type === 'warning') { icon = 'fa-triangle-exclamation'; color = 'var(--warning)'; }
 
             toast.innerHTML = `
-                <i class="fa-solid ${icon}" style="color: ${color}"></i>
-                <span style="font-size: 14px; font-weight: 500;">${message}</span>
-            `;
+        <div class="toast-content">
+            <i class="fa-solid ${icon}" style="color: ${color}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
 
+            // Add to DOM
             container.appendChild(toast);
+
+            // Auto remove after 4s
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                toast.style.transition = '200ms ease-in';
-                setTimeout(() => toast.remove(), 200);
-            }, 3000);
+                toast.style.animation = 'slideOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
+
+        // --- Drag and Drop Logic ---
+        // (Handled directly in upload.html for the upload page.)
     </script>
     {% block extra_js %}{% endblock %}
 </body>

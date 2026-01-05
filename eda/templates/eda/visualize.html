@@ -1,5 +1,4 @@
 {% extends 'eda/base.html' %}
-{% load static %}
 
 {% block title %}Visualize Data - Automated Insights{% endblock %}
 
@@ -7,20 +6,20 @@
 <div class="visualize-workspace">
     <div class="grid-2">
         <!-- Chart Controls Sidebar -->
-        <div class="chart-controls glass-card stark-card widow-border">
+        <div class="chart-controls glass-card tilt-card">
             <div class="controls-header" style="justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:var(--space-md);">
-                    <div class="header-icon hulk-pulse" style="background: var(--iron-red);">
-                        <i class="fa-solid fa-microchip"></i>
+                    <div class="header-icon">
+                        <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div>
-                        <h2 class="wanda-text">JARVIS ANALYSIS CORE</h2>
-                        <p class="text-muted text-sm">Tactical Visual Synthesis</p>
+                        <h2>Chart Builder</h2>
+                        <p class="text-muted text-sm">Create interactive visualizations</p>
                     </div>
                 </div>
                 <div
-                    style="font-size:0.7rem; color:var(--accent); border:1px solid var(--accent); padding:2px 6px; border-radius:4px; font-weight: 800;">
-                    STARK TECH V4.0
+                    style="font-size:0.7rem; color:var(--text-muted); border:1px solid var(--glass-border); padding:2px 6px; border-radius:4px;">
+                    V.2.0
                 </div>
             </div>
 
@@ -29,96 +28,107 @@
 
                 <!-- Chart Type Selection -->
                 <div class="form-group">
-                    <label class="wanda-text">
+                    <label>
                         <i class="fa-solid fa-palette"></i>
-                        Synthesis Mode
+                        Chart Type
                     </label>
 
                     <!-- Recommended presets -->
-                    <div class="preset-row" style="margin-top: 10px;">
-                        <button type="button" class="btn btn-secondary btn-sm stark-link" onclick="applyPreset('dist')">
-                            Distro
+                    <div class="preset-row">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('univariate')">
+                            <i class="fa-solid fa-wave-square"></i> Numeric Distribution
                         </button>
-                        <button type="button" class="btn btn-secondary btn-sm stark-link"
-                            onclick="applyPreset('outlier')">
-                            Anomalies
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('bivariate')">
+                            <i class="fa-solid fa-arrows-left-right"></i> Correlation (Scatter)
                         </button>
-                        <button type="button" class="btn btn-secondary btn-sm stark-link" onclick="applyPreset('corr')">
-                            Links
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm stark-link" onclick="applyPreset('cat')">
-                            Levels
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('missing')">
+                            <i class="fa-solid fa-border-all"></i> Missingness
                         </button>
                     </div>
 
-                    <div class="chart-type-grid" style="margin-top: 15px;">
+                    <div class="chart-type-grid">
                         <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="histogram" checked
                                 onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-chart-bar"></i>
                                 <span>Histogram</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="bar" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-chart-column"></i>
-                                <span>Bar</span>
+                                <span>Bar Chart</span>
+                            </div>
+                        </label>
+                        <label class="chart-type-card">
+                            <input type="radio" name="chart_type" value="line" onchange="handleTypeChange()">
+                            <div class="chart-type-content">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Line Chart</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="scatter" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-braille"></i>
                                 <span>Scatter</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="box" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-chart-gantt"></i>
-                                <span>Box</span>
+                                <span>Box Plot</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="violin" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-guitar"></i>
                                 <span>Violin</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
+                            <input type="radio" name="chart_type" value="pie" onchange="handleTypeChange()">
+                            <div class="chart-type-content">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>Pie Chart</span>
+                            </div>
+                        </label>
+                        <label class="chart-type-card">
                             <input type="radio" name="chart_type" value="heatmap" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
+                            <div class="chart-type-content">
                                 <i class="fa-solid fa-table-cells"></i>
                                 <span>Heatmap</span>
                             </div>
                         </label>
                         <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="pie" onchange="handleTypeChange()">
-                            <div class="chart-type-content holo-plate">
-                                <i class="fa-solid fa-chart-pie"></i>
-                                <span>Pie</span>
+                            <input type="radio" name="chart_type" value="missing_heatmap" onchange="handleTypeChange()">
+                            <div class="chart-type-content">
+                                <i class="fa-solid fa-border-all"></i>
+                                <span>Missing Heatmap</span>
+                            </div>
+                        </label>
+                        <label class="chart-type-card">
+                            <input type="radio" name="chart_type" value="density" onchange="handleTypeChange()">
+                            <div class="chart-type-content">
+                                <i class="fa-solid fa-wave-square"></i>
+                                <span>Density</span>
                             </div>
                         </label>
                     </div>
                 </div>
 
                 <!-- Axis Controls -->
-                <div id="axis-controls" class="axis-controls holo-plate"
-                    style="margin-top: 20px; border-color: var(--primary);">
+                <div id="axis-controls" class="axis-controls">
                     <div class="form-group" id="x-group">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <label id="lbl-x" class="wanda-text"><i class="fa-solid fa-vector-square"></i> Vector
-                                X</label>
-                            <button type="button" class="btn-text"
-                                style="font-size: 0.7rem; color: var(--accent); font-weight: 700;"
-                                onclick="suggestChartForCol()">
-                                <i class="fa-solid fa-brain"></i> JARVIS SUGGEST
-                            </button>
-                        </div>
-                        <select id="x_col" name="x_col" class="select-enhanced" style="border-color: var(--primary);">
+                        <label id="lbl-x">
+                            <i class="fa-solid fa-arrow-right"></i>
+                            X Axis
+                        </label>
+                        <select id="x_col" name="x_col" class="select-enhanced">
                             {% for col in all_cols %}
                             <option value="{{ col }}">{{ col }}</option>
                             {% endfor %}
@@ -126,73 +136,92 @@
                     </div>
 
                     <div class="form-group" id="y-group" style="display:none;">
-                        <label id="lbl-y" class="wanda-text">
-                            <i class="fa-solid fa-bezier-curve"></i>
-                            Vector Y
+                        <label id="lbl-y">
+                            <i class="fa-solid fa-arrow-up"></i>
+                            Y Axis
                         </label>
-                        <select id="y_col" name="y_col" class="select-enhanced" style="border-color: var(--primary);">
+                        <select id="y_col" name="y_col" class="select-enhanced">
                             {% for col in all_cols %}
                             <option value="{{ col }}">{{ col }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <div class="form-group" id="bins-group">
+                        <label>
+                            <i class="fa-solid fa-grip-lines-vertical"></i>
+                            Bins (Histogram)
+                        </label>
+                        <input type="number" id="bins" min="5" max="100" step="1" placeholder="Auto" />
+                    </div>
+
                     <div class="form-group" id="color-group" style="display:none;">
-                        <label class="wanda-text">
+                        <label>
                             <i class="fa-solid fa-palette"></i>
-                            Chromatic Filter
+                            Color by (optional)
                         </label>
                         <select id="color_col" class="select-enhanced">
-                            <option value="">System Default</option>
+                            <option value="">None</option>
                             {% for col in all_cols %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="size-group" style="display:none;">
+                        <label>
+                            <i class="fa-solid fa-circle-dot"></i>
+                            Size by (numeric, optional)
+                        </label>
+                        <select id="size_col" class="select-enhanced">
+                            <option value="">None</option>
+                            {% for col in numeric_cols %}
                             <option value="{{ col }}">{{ col }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary thor-btn w-full btn-lg" style="margin-top: 24px;">
-                    <i class="fa-solid fa-bolt-lightning"></i>
-                    <span>Generate Synthesis</span>
+                <button type="submit" class="btn btn-primary thor-btn w-full btn-lg">
+                    <i class="fa-solid fa-wand-magic"></i>
+                    <span>Generate Chart</span>
                 </button>
             </form>
         </div>
 
         <!-- Chart Display Area -->
-        <div class="chart-display glass-card holo-plate stark-card">
+        <div class="chart-display glass-card tilt-card holo-plate">
             <div class="chart-header">
-                <h2 class="wanda-text">UPLINK STREAM</h2>
+                <h2 class="wanda-text">JARVIS VISUALIZATION PROTOCOL</h2>
                 <div class="chart-actions">
-                    <button class="btn btn-secondary btn-sm stark-link" onclick="downloadChart()">
+                    <button class="btn btn-secondary btn-sm" onclick="downloadChart()">
                         <i class="fa-solid fa-download"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="chart-container" class="chart-container" style="background: rgba(0,229,255,0.02);">
+            <div id="chart-container" class="chart-container">
                 <div class="chart-placeholder">
-                    <div class="placeholder-icon" style="background: rgba(230,33,23,0.1);">
-                        <i class="fa-solid fa-atom" style="color: var(--iron-red);"></i>
+                    <div class="placeholder-icon">
+                        <i class="fa-solid fa-chart-line"></i>
                     </div>
-                    <h3 class="wanda-text">Core Ready</h3>
-                    <p>Assemble vectors and synthesis modes to deploy visual insight.</p>
+                    <h3>Ready to Visualize</h3>
+                    <p>Select a chart type and configure axes to generate your interactive visualization</p>
                 </div>
             </div>
 
             <!-- Chart Insight Panel -->
-            <div id="chart-meta" class="chart-meta-panel stark-card" style="background: rgba(0,0,0,0.4);">
+            <div id="chart-meta" class="chart-meta-panel">
                 <div class="chart-meta-header">
-                    <h3 class="wanda-text" style="font-size: 0.9rem;"><i class="fa-solid fa-brain"></i> JARVIS INTEL
-                    </h3>
+                    <h3><i class="fa-solid fa-circle-info"></i> Chart Insights</h3>
                 </div>
-                <div id="chart-meta-body" class="chart-meta-body text-xs text-muted" style="letter-spacing: 0.5px;">
-                    Awaiting generation for tactical assessment...
+                <div id="chart-meta-body" class="chart-meta-body text-sm text-muted">
+                    Select a chart type and generate it to see tailored tips here.
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 
 <style>
     .visualize-workspace {
@@ -214,18 +243,18 @@
         align-items: center;
         gap: var(--space-md);
         padding-bottom: var(--space-lg);
-        border-bottom: 2px solid var(--primary);
+        border-bottom: 1px solid var(--glass-border);
     }
 
     .header-icon {
         width: 50px;
         height: 50px;
-        background: var(--iron-red);
-        border-radius: var(--radius);
+        background: var(--gradient-primary);
+        border-radius: var(--radius-md);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 15px rgba(230, 33, 23, 0.3);
+        box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);
     }
 
     .header-icon i {
@@ -233,10 +262,15 @@
         color: white;
     }
 
+    .controls-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
     .chart-type-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
+        gap: var(--space-sm);
     }
 
     .chart-type-card {
@@ -247,6 +281,7 @@
     .chart-type-card input {
         position: absolute;
         opacity: 0;
+        cursor: pointer;
     }
 
     .chart-type-content {
@@ -254,46 +289,76 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 15px 10px;
-        border-radius: var(--radius);
-        transition: all var(--transition);
-        color: var(--text-secondary);
+        gap: var(--space-xs);
+        padding: var(--space-lg) var(--space-md);
+        background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-base);
+        color: var(--text-muted);
+    }
+
+    .chart-type-content i {
+        font-size: 1.8rem;
+    }
+
+    .chart-type-content span {
+        font-size: 0.85rem;
+        font-weight: 600;
     }
 
     .chart-type-card:hover .chart-type-content {
-        border-color: var(--primary);
-        color: white;
-        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
     }
 
     .chart-type-card input:checked+.chart-type-content {
-        background: rgba(0, 229, 255, 0.1);
+        background: rgba(99, 102, 241, 0.15);
         border-color: var(--primary);
-        color: white;
-        box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+        color: var(--text-primary);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .chart-type-card input:checked+.chart-type-content i {
+        color: var(--primary);
     }
 
     .axis-controls {
-        padding: 20px;
-        border-radius: var(--radius);
+        padding: var(--space-lg);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
     }
 
     .select-enhanced {
-        background-color: rgba(0, 0, 0, 0.5);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+
+        background-color: rgba(0, 0, 0, 0.3);
         border: 1px solid var(--glass-border);
-        border-radius: 6px;
-        color: white;
-        padding: 10px;
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        padding: 8px 12px;
+        padding-right: 2.5rem;
         width: 100%;
         font-family: inherit;
+        transition: border-color 0.2s;
     }
 
     .select-enhanced:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+        background-color: rgba(0, 243, 255, 0.05);
+    }
+
+    .select-enhanced option {
+        background-color: #1a1a2e;
+        /* Fallback or specific dark color */
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
     }
 
     .chart-display {
@@ -303,9 +368,21 @@
     }
 
     .chart-header {
-        border-bottom: 2px solid var(--primary);
-        margin-bottom: 20px;
-        padding-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-md);
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .chart-header h2 {
+        margin: 0;
+    }
+
+    .chart-actions {
+        display: flex;
+        gap: var(--space-sm);
     }
 
     .chart-container {
@@ -314,43 +391,74 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: var(--radius);
-        overflow: hidden;
+    }
+
+    .chart-placeholder {
+        text-align: center;
+        max-width: 400px;
+        padding: var(--space-3xl);
     }
 
     .placeholder-icon {
         width: 100px;
         height: 100px;
-        margin: 0 auto 20px;
+        margin: 0 auto var(--space-xl);
+        background: rgba(99, 102, 241, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: pulse 3s infinite;
+        animation: pulse 3s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            opacity: 0.8;
-        }
+    .placeholder-icon i {
+        font-size: 3rem;
+        color: var(--primary);
+    }
 
-        50% {
-            transform: scale(1.1);
-            opacity: 1;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
-        }
+    .chart-placeholder h3 {
+        color: var(--text-primary);
+        margin-bottom: var(--space-md);
+    }
 
-        100% {
-            transform: scale(1);
-            opacity: 0.8;
-        }
+    .chart-placeholder p {
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    .preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
     }
 
     .chart-meta-panel {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: var(--radius);
+        margin-top: var(--space-lg);
+        padding: var(--space-lg);
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--glass-border);
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    .chart-meta-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+    }
+
+    .chart-meta-header i {
+        color: var(--primary);
+    }
+
+    @media (max-width: 1200px) {
+        .chart-controls {
+            position: relative;
+            top: 0;
+            max-height: none;
+        }
     }
 </style>
 
@@ -358,58 +466,17 @@
     var VIZ_URL = "{% url 'visualize_data' file_id=file_id %}";
 
     function applyPreset(type) {
-        if (type === "dist") {
-            setChart('histogram');
-        } else if (type === "outlier") {
-            setChart('box');
-        } else if (type === "corr") {
-            setChart('scatter');
-        } else if (type === "cat") {
-            setChart('bar');
+        if (type === "univariate") {
+            const radio = document.querySelector('input[value="histogram"]');
+            if (radio) radio.checked = true;
+        } else if (type === "bivariate") {
+            const radio = document.querySelector('input[value="scatter"]');
+            if (radio) radio.checked = true;
         } else if (type === "missing") {
-            setChart('missing_heatmap');
+            const radio = document.querySelector('input[value="missing_heatmap"]');
+            if (radio) radio.checked = true;
         }
-        showToast(`Switched to ${type} preset`, "info");
-    }
-
-    function setChart(val) {
-        const radio = document.querySelector(`input[value="${val}"]`);
-        if (radio) {
-            radio.checked = true;
-            handleTypeChange();
-        }
-    }
-
-    async function suggestChartForCol() {
-        const col = document.getElementById("x_col").value;
-        showToast(`AI is analyzing ${col}...`, "info");
-
-        // This leverages the ask_ai endpoint to get a visualization recommendation
-        try {
-            const resp = await fetch("{% url 'ask_ai' file_id=file_id %}", {
-                method: "POST",
-                headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/json" },
-                body: JSON.stringify({ question: `What is the best way to visualize the column '${col}'? Pick one from: histogram, bar, box, violin, pie. Just give the chart type name and a short reason.` })
-            });
-            const data = await resp.json();
-            if (data.answer) {
-                const answer = data.answer.toLowerCase();
-                if (answer.includes('histogram')) setChart('histogram');
-                else if (answer.includes('bar')) setChart('bar');
-                else if (answer.includes('box')) setChart('box');
-                else if (answer.includes('violin')) setChart('violin');
-                else if (answer.includes('pie')) setChart('pie');
-
-                showToast(`AI suggests: ${data.answer}`, "success");
-            }
-        } catch (e) {
-            showToast("Failed to get AI suggestion", "error");
-        }
-    }
-
-    function handleColChange(axis) {
-        // Placeholder for future logic like auto-detecting types
-        console.log(`Column changed on ${axis}`);
+        handleTypeChange();
     }
 
     function handleTypeChange() {
@@ -453,8 +520,8 @@
             yGroup.style.display = "block";
             const lblY = document.querySelector('#y-group label');
             const lblX = document.querySelector('#x-group label');
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-layer-group"></i> Group By (X)';
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-chart-simple"></i> Value (Y)';
+            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-layer-group"></i> Group By (X Axis)';
+            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-chart-simple"></i> Values (Y Axis)';
         } else if (chartType === "bar") {
             xGroup.style.display = "block";
             yGroup.style.display = "block";
@@ -491,7 +558,7 @@
         const sizeCol = document.getElementById("size_col") ? document.getElementById("size_col").value : null;
 
         const originalBtnText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch strange-spinner"></i> SYNTHESIZING...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Generating...';
         btn.disabled = true;
 
         fetch(VIZ_URL, {

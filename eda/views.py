@@ -1,103 +1,27 @@
 import os
 import json
+import shutil
 import pandas as pd
 from io import StringIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
-from django.core.files.base import ContentFile
 from .forms import UploadFileForm
-from .models import Uploads, Reports, DatasetVersion, ChatMessage
+from .models import Uploads, Reports, ChatMessage, DatasetVersion
 # Removed ydata_profiling - using custom report generation
 import plotly.express as px
 import plotly.io as pio
 from groq import Groq, RateLimitError
 import numpy as np
 
-# Monkey-patch numpy.asarray for compatibility
+# Monkey-patch numpy.asarray for compatibility with some library dependencies
+# that might pass 'copy' argument (NumPy 2.0+ style) to older NumPy versions.
 orig_asarray = np.asarray
 def patched_asarray(a, dtype=None, order=None, **kwargs):
     kwargs.pop('copy', None)
     return orig_asarray(a, dtype=dtype, order=order, **kwargs)
 np.asarray = patched_asarray
-
-def calculate_health_score(df):
-    """Calculate a data health score from 0-100"""
-    if df.empty:
-        return 0, []
-        
-    score = 100
-    breakdown = []
-    
-    # 1. Missing Values penalty
-    missing_pct = (df.isna().sum().sum() / (df.size)) * 100
-    if missing_pct > 0:
-        penalty = min(20, missing_pct * 0.5)
-        score -= penalty
-        breakdown.append(f"Missing Values: -{round(penalty, 1)} pts")
-        
-    # 2. Duplicate Rows penalty
-    dup_pct = (df.duplicated().sum() / len(df)) * 100
-    if dup_pct > 0:
-        penalty = min(20, dup_pct * 1.0)
-        score -= penalty
-        breakdown.append(f"Duplicate Rows: -{round(penalty, 1)} pts")
-        
-    # 3. Constant Columns penalty
-    constant_cols = [col for col in df.columns if df[col].nunique() <= 1]
-    if constant_cols:
-        penalty = min(15, len(constant_cols) * 3)
-        score -= penalty
-        breakdown.append(f"Constant Columns: -{penalty} pts")
-        
-    # 4. Outliers penalty (numeric only)
-    numeric_cols = df.select_dtypes(include=[np.number]).columns
-    if not numeric_cols.empty:
-        outlier_total = 0
-        for col in numeric_cols:
-            q1 = df[col].quantile(0.25)
-            q3 = df[col].quantile(0.75)
-            iqr = q3 - q1
-            outliers = df[(df[col] < (q1 - 1.5 * iqr)) | (df[col] > (q3 + 1.5 * iqr))]
-            if len(outliers) > 0:
-                outlier_total += 1
-        
-        if outlier_total > 0:
-            penalty = min(10, outlier_total * 2)
-            score -= penalty
-            breakdown.append(f"Outliers detected: -{penalty} pts")
-            
-    return max(0, round(score)), breakdown
-
-def get_cleaning_suggestions(df):
-    """Generate rule-based cleaning suggestions for each column"""
-    suggestions = {}
-    for col in df.columns:
-        col_suggestions = []
-        missing_pct = df[col].isna().mean() * 100
-        dtype = df[col].dtype
-        unique_pct = (df[col].nunique() / len(df)) * 100
-        
-        if missing_pct > 50:
-            col_suggestions.append({"action": "drop_column", "reason": "Over 50% missing values", "severity": "high"})
-        elif missing_pct > 0:
-            if np.issubdtype(dtype, np.number):
-                col_suggestions.append({"action": "fill_mean", "reason": "Numeric column has missing values", "severity": "medium"})
-                col_suggestions.append({"action": "fill_median", "reason": "Numeric column has missing values", "severity": "medium"})
-            else:
-                col_suggestions.append({"action": "fill_mode", "reason": "Categorical column has missing values", "severity": "medium"})
-        
-        if df[col].nunique() == 1:
-            col_suggestions.append({"action": "drop_column", "reason": "Constant value (no information)", "severity": "medium"})
-            
-        if not np.issubdtype(dtype, np.number) and df[col].nunique() < 10:
-             col_suggestions.append({"action": "encode_onehot", "reason": "Few unique categories, suitable for encoding", "severity": "low"})
-             
-        if col_suggestions:
-            suggestions[col] = col_suggestions
-            
-    return suggestions
 
 def sample_dashboard(request):
     """View to render the sample dashboard UI."""
@@ -117,14 +41,6 @@ def upload_file(request):
 
             # Save to Uploads model
             upload = Uploads.objects.create(name=name, file=file)
-            
-            # Create initial version
-            DatasetVersion.objects.create(
-                upload=upload,
-                file=file,
-                version_number=1,
-                action_taken="Original Upload"
-            )
 
             return redirect("eda_report", file_id=upload.id)
     else:
@@ -245,9 +161,6 @@ def generate_eda_report(request, file_id):
         correlation_json = json.dumps(correlation_matrix) if correlation_matrix else None
         numeric_cols_json = json.dumps(numeric_cols)
         
-        # Data Quality Health Score
-        health_score, health_breakdown = calculate_health_score(df)
-        
         context = {
             'file_id': file_id,
             'dataset_info': dataset_info,
@@ -258,9 +171,6 @@ def generate_eda_report(request, file_id):
             'sample_data': sample_data,
             'numeric_cols': numeric_cols_json,
             'categorical_cols': categorical_cols,
-            'health_score': health_score,
-            'health_breakdown': health_breakdown,
-            'versions': upload.versions.all(),
         }
         
         return render(request, "eda/report.html", context)
@@ -284,19 +194,11 @@ def clean_data_view(request, file_id):
         MAX_ROWS = 10000
         display_df = df.head(MAX_ROWS)
 
-        # Get health score and suggestions
-        health_score, health_breakdown = calculate_health_score(df)
-        suggestions = get_cleaning_suggestions(df)
-
         context = {
             "df": display_df.to_html(classes="table", index=False),
             "column_info": column_info,
             "file_id": file_id,
-            "total_rows": len(df),
-            "health_score": health_score,
-            "health_breakdown": health_breakdown,
-            "suggestions": suggestions,
-            "versions": upload.versions.all(),
+            "total_rows": len(df)
         }
         return render(request, "eda/clean_data.html", context)
     except Exception as e:
@@ -382,27 +284,29 @@ def apply_cleaning_action(request):
         else:
             return JsonResponse({"error": "Invalid action", "success": False}, status=400)
 
-        # Save cleaned data as a NEW VERSION
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        
-        action_desc = f"{action.replace('_', ' ').capitalize()}"
-        if column:
-            action_desc += f" on {column}"
-        
+        # Implementation of Versioning: Create a version before/after the change
+        # For simplicity, we'll store the state AFTER the cleaning action
         new_version_num = upload.current_version + 1
-        new_version = DatasetVersion.objects.create(
+        version_filename = f"version_{new_version_num}_{os.path.basename(upload.file.name)}"
+        version_relative_path = os.path.join('uploads', 'versions', version_filename)
+        version_absolute_path = os.path.join(os.path.dirname(upload.file.path), 'versions', version_filename)
+        
+        # Ensure versions directory exists
+        os.makedirs(os.path.dirname(version_absolute_path), exist_ok=True)
+        
+        # Save cleaned data back to the main file AND the version file
+        df.to_csv(upload.file.path, index=False)
+        df.to_csv(version_absolute_path, index=False)
+
+        # Create version record
+        DatasetVersion.objects.create(
             upload=upload,
+            file=version_relative_path,
             version_number=new_version_num,
-            action_taken=action_desc
+            action_taken=f"{action} on {column}" if column else action
         )
         
-        # Save file to the new version
-        filename = f"{os.path.basename(upload.file.name).split('.')[0]}_v{new_version_num}.csv"
-        new_version.file.save(filename, ContentFile(csv_buffer.getvalue().encode()), save=True)
-        
-        # Update current upload pointer
-        upload.file = new_version.file
+        # Update current version in upload
         upload.current_version = new_version_num
         upload.save()
 
@@ -411,20 +315,12 @@ def apply_cleaning_action(request):
             (col, f"{df[col].isna().sum()} ({(df[col].isna().mean() * 100):.2f}%)", str(df[col].dtype))
             for col in df.columns
         ]
-        
-        # Recalculate health and suggestions
-        health_score, health_breakdown = calculate_health_score(df)
-        suggestions = get_cleaning_suggestions(df)
 
         return JsonResponse({
             "table_html": df.head(10000).to_html(classes="table", index=False),
             "column_info": column_info,
             "total_rows": len(df),
-            "health_score": health_score,
-            "health_breakdown": health_breakdown,
-            "suggestions": suggestions,
-            "success": True,
-            "version_number": upload.current_version
+            "success": True
         })
 
     except json.JSONDecodeError:
@@ -432,54 +328,6 @@ def apply_cleaning_action(request):
     except Exception as e:
         return JsonResponse({"error": str(e), "success": False}, status=500)
 
-
-@require_POST
-def undo_cleaning(request):
-    try:
-        data = json.loads(request.body)
-        file_id = data.get("file_id")
-        upload = get_object_or_404(Uploads, id=file_id)
-        
-        if upload.current_version <= 1:
-            return JsonResponse({"error": "Already at the original version", "success": False}, status=400)
-            
-        # Get the current version and delete it
-        current_v = DatasetVersion.objects.filter(upload=upload, version_number=upload.current_version).first()
-        if current_v:
-            current_v.delete()
-            
-        # Point to the previous version
-        prev_v = DatasetVersion.objects.filter(upload=upload).order_by('-version_number').first()
-        if prev_v:
-            upload.file = prev_v.file
-            upload.current_version = prev_v.version_number
-            upload.save()
-            
-            # Load the data for preview
-            df = pd.read_csv(upload.file.path)
-            column_info = [
-                (col, f"{df[col].isna().sum()} ({(df[col].isna().mean() * 100):.2f}%)", str(df[col].dtype))
-                for col in df.columns
-            ]
-            
-            health_score, health_breakdown = calculate_health_score(df)
-            suggestions = get_cleaning_suggestions(df)
-
-            return JsonResponse({
-                "table_html": df.head(10000).to_html(classes="table", index=False),
-                "column_info": column_info,
-                "total_rows": len(df),
-                "health_score": health_score,
-                "health_breakdown": health_breakdown,
-                "suggestions": suggestions,
-                "success": True,
-                "version_number": upload.current_version
-            })
-        else:
-             return JsonResponse({"error": "No previous version found", "success": False}, status=400)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e), "success": False}, status=500)
 
 def download_cleaned_data(request, file_id):
     upload = get_object_or_404(Uploads, id=file_id)
@@ -616,64 +464,117 @@ def ask_ai(request, file_id):
             # Prepare context about the data
             df = pd.read_csv(upload.file.path)
             
-            # Get existing history
-            history = ChatMessage.objects.filter(upload=upload).order_by('created_at')
-            messages = [
-                {"role": "system", "content": f"You are a senior data scientist. Analyzing dataset: {upload.name}. Shape: {df.shape}. Columns: {', '.join(df.columns)}"}
-            ]
+            # Create a summary of the dataframe
+            buffer = StringIO()
+            df.info(buf=buffer)
+            info_str = buffer.getvalue()
             
-            for msg in history:
-                messages.append({"role": msg.role, "content": msg.content})
+            context = f"""
+            You are a senior data scientist. Here is information about the dataset the user is asking about:
             
-            # Check if this is a request for a cleaning plan
-            is_cleaning_plan = data.get("is_cleaning_plan", False)
-            if is_cleaning_plan:
-                user_question = "Generate a recommended cleaning plan for this dataset based on its structure and data types."
+            File Name: {upload.name}
+            Columns: {', '.join(df.columns)}
+            Shape: {df.shape}
             
-            # Add current question
-            messages.append({"role": "user", "content": user_question})
+            Data Info:
+            {info_str}
             
-            # Create a summary context for the AI if history is thin
-            if len(history) < 2:
-                buffer = StringIO()
-                df.info(buf=buffer)
-                info_str = buffer.getvalue()
-                
-                sum_context = f"""
-                Data Info:
-                {info_str}
-                
-                First 5 rows:
-                {df.head().to_string()}
-                
-                Statistical Summary:
-                {df.describe().to_string()}
-                """
-                messages[0]["content"] += f"\n\nContext:\n{sum_context}"
-
+            First 5 rows:
+            {df.head().to_string()}
+            
+            Statistical Summary:
+            {df.describe().to_string()}
+            
+            User Question: {user_question}
+            
+            Write a short, simple answer as plain bullet points only. Follow these rules:
+            - No headings, no emojis, no numbered sections.
+            - 1-2 bullet points maximum.
+            - Each bullet should be one clear, concise sentence.
+            - Focus only on what is relevant to the user's question.
+            - Do NOT include raw pandas output or long tables, just summarize.
+            - Do NOT start with phrases like "Based on the information provided".
+            """
+            
             chat_completion = client.chat.completions.create(
-                messages=messages,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": context,
+                    }
+                ],
                 model="llama-3.1-8b-instant",
             )
             
-            ai_answer = chat_completion.choices[0].message.content
+            answer = chat_completion.choices[0].message.content
             
-            # Save to history
-            ChatMessage.objects.create(upload=upload, role="user", content=user_question)
-            ChatMessage.objects.create(upload=upload, role="assistant", content=ai_answer)
+            # Persist chat history
+            ChatMessage.objects.create(upload=upload, role='user', content=user_question)
+            ChatMessage.objects.create(upload=upload, role='assistant', content=answer)
             
-            return JsonResponse({"answer": ai_answer, "success": True})
+            return JsonResponse({"answer": answer, "success": True})
 
         except RateLimitError:
             return JsonResponse({"error": "Free tier rate limit reached. Please wait a minute and try again.", "success": False}, status=429)
         except Exception as e:
             return JsonResponse({"error": str(e), "success": False}, status=500)
 
+    # Fetch existing chat history
+    chat_history = upload.chat_history.all()
+    
     # Check if key is configured on server to infer UI state
     key_configured = bool(os.environ.get("GROQ_API_KEY"))
-    chat_history = ChatMessage.objects.filter(upload=upload).order_by('created_at')
     return render(request, "eda/ai_insights.html", {
-        "file_id": file_id,
+        "file_id": file_id, 
         "key_configured": key_configured,
         "chat_history": chat_history
     })
+
+
+@csrf_protect
+@require_POST
+def undo_cleaning(request, file_id):
+    try:
+        upload = get_object_or_404(Uploads, id=file_id)
+        
+        # Get the previous version
+        if upload.current_version <= 1:
+            return JsonResponse({"error": "No more versions to undo to", "success": False}, status=400)
+            
+        previous_version_num = upload.current_version - 1
+        previous_version = DatasetVersion.objects.filter(upload=upload, version_number=previous_version_num).first()
+        
+        if not previous_version:
+             # If exact previous doesn't exist, try getting the latest one that's less than current
+             previous_version = DatasetVersion.objects.filter(upload=upload, version_number__lt=upload.current_version).order_by('-version_number').first()
+        
+        if not previous_version:
+            return JsonResponse({"error": "Previous version not found", "success": False}, status=404)
+
+        # Revert main file to previous version
+        shutil.copy2(previous_version.file.path, upload.file.path)
+        
+        # Update upload current version
+        upload.current_version = previous_version.version_number
+        upload.save()
+        
+        # Remove the latest version record (the one we just undid)
+        DatasetVersion.objects.filter(upload=upload, version_number__gt=previous_version.version_number).delete()
+
+        # Reload data to return new state
+        df = pd.read_csv(upload.file.path)
+        column_info = [
+            (col, f"{df[col].isna().sum()} ({(df[col].isna().mean() * 100):.2f}%)", str(df[col].dtype))
+            for col in df.columns
+        ]
+
+        return JsonResponse({
+            "table_html": df.head(10000).to_html(classes="table", index=False),
+            "column_info": column_info,
+            "total_rows": len(df),
+            "success": True,
+            "message": f"Reverted to version {upload.current_version}"
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e), "success": False}, status=500)
