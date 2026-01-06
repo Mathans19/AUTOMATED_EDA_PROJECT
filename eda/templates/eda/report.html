@@ -1,262 +1,284 @@
 {% extends 'eda/base.html' %}
 {% load eda_filters %}
 
-{% block title %}EDA Report - Automated Insights{% endblock %}
+{% block title %}Grimoire (Report) - DataWitch{% endblock %}
 
 {% block content %}
-<div class="report-workspace">
-    <div class="report-container">
-        <!-- Report Header -->
-        <div class="report-header glass-card">
-            <div>
-                <h2 class="wanda-text"><i class="fa-solid fa-chart-line"></i> Exploratory Data Analysis Report</h2>
-                <p class="text-muted text-sm">Comprehensive data insights and statistics</p>
-            </div>
-            <div class="report-actions">
-                <a href="{% url 'clean_data' file_id=file_id %}" class="btn btn-secondary">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Clean Data</span>
-                </a>
-                <a href="{% url 'visualize_data' file_id=file_id %}" class="btn btn-primary thor-btn">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Visualize</span>
-                </a>
-            </div>
+<div class="min-h-screen p-4 md:p-8 pt-24 space-y-8 animate-fade-in text-white/90">
+
+    <!-- Header Section -->
+    <div
+        class="flex flex-col md:flex-row justify-between items-end border-b border-scarlet-900/50 pb-6 relative overflow-hidden">
+        <!-- Decoration -->
+        <div class="absolute -top-10 right-0 w-64 h-64 bg-scarlet-600/10 rounded-full blur-3xl pointer-events-none">
         </div>
 
-        <!-- Data Quality Alerts -->
-        {% if alerts %}
-        <div class="alerts-section">
-            {% for alert in alerts %}
-            <div class="alert alert-{{ alert.type }} glass-card">
+        <div class="relative z-10">
+            <h1 class="text-4xl md:text-5xl font-mystic text-white mb-2 drop-shadow-[0_0_15px_rgba(255,41,66,0.5)]">
+                GRIMOIRE OF INSIGHTS
+            </h1>
+            <p class="text-scarlet-400/80 text-sm tracking-widest uppercase font-bold flex items-center gap-2">
+                <i class="fa-solid fa-eye text-scarlet-500"></i> The Truth Revealed
+            </p>
+        </div>
+
+        <div class="flex gap-4 relative z-10 mt-4 md:mt-0">
+            <a href="{% url 'clean_data' file_id=file_id %}"
+                class="px-4 py-2 rounded bg-black/40 border border-scarlet-900/30 text-scarlet-300 hover:text-white hover:border-scarlet-500 transition-all flex items-center gap-2 group">
+                <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Alter Reality</span>
+            </a>
+            <a href="{% url 'visualize_data' file_id=file_id %}"
+                class="px-4 py-2 rounded bg-scarlet-900/20 border border-scarlet-500/50 text-white hover:bg-scarlet-600 hover:border-scarlet-500 hover:shadow-[0_0_15px_rgba(255,41,66,0.4)] transition-all flex items-center gap-2 group">
+                <i class="fa-solid fa-chart-line group-hover:scale-110 transition-transform"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Visual Scrying</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Data Quality Alerts (Hexes) -->
+    {% if alerts %}
+    <div class="space-y-4">
+        {% for alert in alerts %}
+        <div
+            class="flex items-start gap-4 p-4 rounded bg-black/40 border-l-4 border border-t-0 border-r-0 border-b-0 {% if alert.type == 'error' %}border-l-red-500{% elif alert.type == 'warning' %}border-l-amber-500{% else %}border-l-blue-500{% endif %} backdrop-blur-sm animate-fade-in-up">
+            <div class="p-2 rounded bg-white/5">
                 <i
-                    class="fa-solid fa-{% if alert.type == 'error' %}exclamation-circle{% elif alert.type == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                <span>{{ alert.message }}</span>
+                    class="fa-solid fa-{% if alert.type == 'error' %}skull-crossbones text-red-500{% elif alert.type == 'warning' %}triangle-exclamation text-amber-500{% else %}circle-info text-blue-500{% endif %}"></i>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Dataset Overview -->
-        <div class="overview-section glass-card collapsible" data-state="open">
-            <div class="collapsible-header" onclick="toggleSection(this)">
-                <div class="collapsible-title">
-                    <h3><i class="fa-solid fa-database"></i> Dataset Overview</h3>
-                </div>
-                <i class="fa-solid fa-chevron-up"></i>
-            </div>
-            <div class="collapsible-body">
-                <div class="stats-grid">
-                    <div class="stat-card widow-border">
-                        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.2);">
-                            <i class="fa-solid fa-table" style="color: #6366f1;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.total_rows|floatformat:0 }}</div>
-                            <div class="stat-label">Total Rows</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
-                            <i class="fa-solid fa-columns" style="color: #22c55e;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.total_columns }}</div>
-                            <div class="stat-label">Total Columns</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2);">
-                            <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.total_missing }}</div>
-                            <div class="stat-label">Missing Values</div>
-                            <div class="stat-sublabel">{{ dataset_info.missing_percentage|floatformat:2 }}%</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2);">
-                            <i class="fa-solid fa-copy" style="color: #f59e0b;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.duplicate_rows }}</div>
-                            <div class="stat-label">Duplicate Rows</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
-                            <i class="fa-solid fa-hashtag" style="color: #3b82f6;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.numeric_columns }}</div>
-                            <div class="stat-label">Numeric Columns</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.2);">
-                            <i class="fa-solid fa-tags" style="color: #a855f7;"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">{{ dataset_info.categorical_columns }}</div>
-                            <div class="stat-label">Categorical Columns</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="insight-chips">
-                    {% if dataset_info.missing_percentage > 0 %}
-                    <span class="insight-chip">
-                        <i class="fa-solid fa-droplet"></i>
-                        {{ dataset_info.missing_percentage|floatformat:1 }}% missing values overall
-                    </span>
-                    {% endif %}
-                    {% if dataset_info.duplicate_rows > 0 %}
-                    <span class="insight-chip">
-                        <i class="fa-solid fa-clone"></i>
-                        {{ dataset_info.duplicate_rows }} duplicate rows detected
-                    </span>
-                    {% endif %}
-                    {% if alerts %}
-                    <span class="insight-chip">
-                        <i class="fa-solid fa-bell"></i>
-                        {{ alerts|length }} data quality alerts
-                    </span>
-                    {% endif %}
-                </div>
+            <div>
+                <h4 class="font-bold text-sm uppercase tracking-wider text-white">
+                    {% if alert.type == 'error' %}Critical Anomaly{% elif alert.type == 'warning' %}Instability
+                    Detected{% else %}Observation{% endif %}
+                </h4>
+                <p class="text-gray-400 text-sm">{{ alert.message }}</p>
             </div>
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-        <!-- Column Information -->
-        <div class="columns-section glass-card collapsible" data-state="open">
-            <div class="collapsible-header" onclick="toggleSection(this)">
-                <div class="collapsible-title">
-                    <h3><i class="fa-solid fa-list"></i> Column Information</h3>
-                </div>
-                <i class="fa-solid fa-chevron-up"></i>
+    <!-- Overview Stats (Runes) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <!-- Helper Macro for Cards -->
+        {% with "total_rows" as key %}{% endwith %}
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-scarlet-900/20 border border-scarlet-500/30 flex items-center justify-center text-scarlet-500 group-hover:shadow-[0_0_10px_rgba(255,41,66,0.4)] transition-shadow">
+                <i class="fa-solid fa-table"></i>
             </div>
-            <div class="collapsible-body">
-                <div class="columns-table-wrapper">
-                    <table class="columns-table">
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.total_rows|floatformat:0 }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Total Rows</div>
+        </div>
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-emerald-900/20 border border-emerald-500/30 flex items-center justify-center text-emerald-500 group-hover:shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-shadow">
+                <i class="fa-solid fa-columns"></i>
+            </div>
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.total_columns }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Columns</div>
+        </div>
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-red-900/20 border border-red-500/30 flex items-center justify-center text-red-500 group-hover:shadow-[0_0_10px_rgba(239,68,68,0.4)] transition-shadow">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.total_missing }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Missing Values</div>
+            <div class="text-[0.6rem] text-red-400 font-mono">{{ dataset_info.missing_percentage|floatformat:2 }}%</div>
+        </div>
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-amber-900/20 border border-amber-500/30 flex items-center justify-center text-amber-500 group-hover:shadow-[0_0_10px_rgba(245,158,11,0.4)] transition-shadow">
+                <i class="fa-solid fa-clone"></i>
+            </div>
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.duplicate_rows }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Duplicates</div>
+        </div>
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-blue-900/20 border border-blue-500/30 flex items-center justify-center text-blue-500 group-hover:shadow-[0_0_10px_rgba(59,130,246,0.4)] transition-shadow">
+                <i class="fa-solid fa-hashtag"></i>
+            </div>
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.numeric_columns }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Numeric</div>
+        </div>
+
+        <div
+            class="chaos-card p-4 rounded-lg flex flex-col items-center justify-center text-center gap-2 group hover:scale-[1.02] transition-transform">
+            <div
+                class="w-10 h-10 rounded-full bg-purple-900/20 border border-purple-500/30 flex items-center justify-center text-purple-500 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)] transition-shadow">
+                <i class="fa-solid fa-tags"></i>
+            </div>
+            <div class="text-2xl font-mystic text-white">{{ dataset_info.categorical_columns }}</div>
+            <div class="text-[0.65rem] uppercase tracking-widest text-gray-400 font-bold">Categorical</div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Left Column: Details -->
+        <div class="lg:col-span-12 space-y-8">
+
+            <!-- Column Information -->
+            <div class="chaos-card rounded-xl overflow-hidden group">
+                <div class="p-4 border-b border-scarlet-900/50 bg-black/40 flex justify-between items-center cursor-pointer"
+                    onclick="toggleSection(this)">
+                    <h3 class="font-mystic text-xl text-white flex items-center gap-3">
+                        <i class="fa-solid fa-scroll text-scarlet-500"></i> Codex of Variables
+                    </h3>
+                    <i class="fa-solid fa-chevron-up text-scarlet-500 transition-transform duration-300"></i>
+                </div>
+
+                <div class="collapsible-content p-0 transition-all duration-300 overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>Column Name</th>
-                                <th>Data Type</th>
-                                <th>Missing</th>
-                                <th>Unique Values</th>
-                                {% if numeric_cols %}
-                                <th>Mean</th>
-                                <th>Median</th>
-                                <th>Std Dev</th>
-                                <th>Min</th>
-                                <th>Max</th>
-                                {% endif %}
+                            <tr
+                                class="text-xs uppercase tracking-wider text-gray-400 border-b border-scarlet-900/30 bg-black/20">
+                                <th class="p-4 font-bold">Column</th>
+                                <th class="p-4 font-bold">Type</th>
+                                <th class="p-4 font-bold text-center">Missing</th>
+                                <th class="p-4 font-bold text-center">Unique</th>
+                                <th class="p-4 font-bold text-right">Stats (Num)</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-sm divide-y divide-scarlet-900/10">
                             {% for col in column_info %}
-                            <tr>
-                                <td><strong>{{ col.name }}</strong></td>
-                                <td><span class="badge badge-{{ col.dtype|slice:':3' }}">{{ col.dtype }}</span></td>
-                                <td>
+                            <tr class="hover:bg-scarlet-900/10 transition-colors">
+                                <td class="p-4 font-medium text-white">{{ col.name }}</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 rounded text-[0.65rem] font-bold uppercase tracking-wider 
+                                    {% if 'int' in col.dtype or 'float' in col.dtype %}bg-blue-900/30 text-blue-400 border border-blue-500/20
+                                    {% elif 'object' in col.dtype or 'str' in col.dtype %}bg-purple-900/30 text-purple-400 border border-purple-500/20
+                                    {% elif 'date' in col.dtype %}bg-emerald-900/30 text-emerald-400 border border-emerald-500/20
+                                    {% else %}bg-gray-800 text-gray-400 border border-gray-600/30{% endif %}">
+                                        {{ col.dtype }}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-center">
                                     {% if col.missing_count > 0 %}
-                                    <span class="text-warning">{{ col.missing_count }} ({{ col.missing_percentage
-                                        }}%)</span>
+                                    <span class="text-red-400 font-bold">{{ col.missing_percentage }}%</span>
+                                    <span class="text-xs text-gray-500 block">({{ col.missing_count }})</span>
                                     {% else %}
-                                    <span class="text-success">0</span>
+                                    <span class="text-emerald-500"><i class="fa-solid fa-check"></i></span>
                                     {% endif %}
                                 </td>
-                                <td>{{ col.unique_count }} ({{ col.unique_percentage }}%)</td>
-                                {% if col.name in numeric_cols %}
-                                <td>{{ col.mean|default:"N/A" }}</td>
-                                <td>{{ col.median|default:"N/A" }}</td>
-                                <td>{{ col.std|default:"N/A" }}</td>
-                                <td>{{ col.min|default:"N/A" }}</td>
-                                <td>{{ col.max|default:"N/A" }}</td>
-                                {% else %}
-                                <td colspan="5" class="text-muted">-</td>
-                                {% endif %}
+                                <td class="p-4 text-center">
+                                    <span class="text-white">{{ col.unique_count }}</span>
+                                    <span class="text-xs text-gray-500 block">({{ col.unique_percentage }}%)</span>
+                                </td>
+                                <td class="p-4 text-right font-mono text-xs text-gray-400">
+                                    {% if col.name in numeric_cols %}
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                                        <span>Min: <span class="text-white">{{ col.min|default:"-"|floatformat:2
+                                                }}</span></span>
+                                        <span>Max: <span class="text-white">{{ col.max|default:"-"|floatformat:2
+                                                }}</span></span>
+                                        <span>Avg: <span class="text-white">{{ col.mean|default:"-"|floatformat:2
+                                                }}</span></span>
+                                        <span>Std: <span class="text-white">{{ col.std|default:"-"|floatformat:2
+                                                }}</span></span>
+                                    </div>
+                                    {% else %}
+                                    <span class="opacity-30">-</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- Missing Values Analysis -->
-        {% if missing_analysis %}
-        <div class="missing-section glass-card collapsible" data-state="open">
-            <div class="collapsible-header" onclick="toggleSection(this)">
-                <div class="collapsible-title">
-                    <h3><i class="fa-solid fa-exclamation-triangle"></i> Missing Values Analysis</h3>
-                </div>
-                <i class="fa-solid fa-chevron-up"></i>
-            </div>
-            <div class="collapsible-body">
-                <div class="missing-list">
-                    {% for col, info in missing_analysis.items %}
-                    <div class="missing-item">
-                        <div class="missing-col-name">{{ col }}</div>
-                        <div class="missing-bar-wrapper">
-                            <div class="missing-bar {% if info.percentage > 50 %}bar-critical{% elif info.percentage > 25 %}bar-warning{% else %}bar-normal{% endif %}"
-                                style="--width: {{ info.percentage|default:0 }}%; width: var(--width);">
+            <!-- Missing Values & Correlation Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- Missing Analysis -->
+                {% if missing_analysis %}
+                <div class="chaos-card rounded-xl overflow-hidden h-fit">
+                    <div class="p-4 border-b border-scarlet-900/50 bg-black/40 flex justify-between items-center cursor-pointer"
+                        onclick="toggleSection(this)">
+                        <h3 class="font-mystic text-lg text-white flex items-center gap-3">
+                            <i class="fa-solid fa-ghost text-scarlet-500"></i> Void Analysis (Missing)
+                        </h3>
+                        <i class="fa-solid fa-chevron-up text-scarlet-500 transition-transform duration-300"></i>
+                    </div>
+                    <div class="collapsible-content p-6 space-y-4">
+                        {% for col, info in missing_analysis.items %}
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-bold uppercase tracking-wider">
+                                <span class="text-gray-300">{{ col }}</span>
+                                <span
+                                    class="{% if info.percentage > 50 %}text-red-500{% elif info.percentage > 20 %}text-amber-500{% else %}text-blue-400{% endif %}">
+                                    {{ info.percentage }}%
+                                </span>
+                            </div>
+                            <div class="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-gray-800">
+                                <div class="h-full rounded-full {% if info.percentage > 50 %}bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]{% elif info.percentage > 20 %}bg-amber-500{% else %}bg-blue-500{% endif %} missing-bar"
+                                    data-percentage="{{ info.percentage }}"></div>
                             </div>
                         </div>
-                        <div class="missing-stats">{{ info.count }} ({{ info.percentage }}%)</div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-        </div>
-        {% endif %}
+                {% endif %}
 
-        <!-- Correlation Matrix -->
-        {% if correlation_matrix and numeric_cols|length > 1 %}
-        <div class="correlation-section glass-card collapsible" data-state="open">
-            <div class="collapsible-header" onclick="toggleSection(this)">
-                <div class="collapsible-title">
-                    <h3><i class="fa-solid fa-project-diagram"></i> Correlation Matrix</h3>
+                <!-- Correlation Matrix -->
+                {% if correlation_matrix and numeric_cols|length > 1 %}
+                <div class="chaos-card rounded-xl overflow-hidden h-fit">
+                    <div class="p-4 border-b border-scarlet-900/50 bg-black/40 flex justify-between items-center cursor-pointer"
+                        onclick="toggleSection(this)">
+                        <h3 class="font-mystic text-lg text-white flex items-center gap-3">
+                            <i class="fa-solid fa-network-wired text-scarlet-500"></i> Entanglement (Correlation)
+                        </h3>
+                        <i class="fa-solid fa-chevron-up text-scarlet-500 transition-transform duration-300"></i>
+                    </div>
+                    <div class="collapsible-content p-4">
+                        <div id="correlation-chart" class="w-full min-h-[400px]"></div>
+                    </div>
                 </div>
-                <i class="fa-solid fa-chevron-up"></i>
+                {% endif %}
             </div>
-            <div class="collapsible-body">
-                <div id="correlation-chart" style="min-height: 400px;"></div>
-            </div>
-        </div>
-        {% endif %}
 
-        <!-- Sample Data -->
-        <div class="sample-section glass-card collapsible" data-state="open">
-            <div class="collapsible-header" onclick="toggleSection(this)">
-                <div class="collapsible-title">
-                    <h3><i class="fa-solid fa-eye"></i> Sample Data (First 10 Rows)</h3>
+            <!-- Sample Data -->
+            <div class="chaos-card rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-scarlet-900/50 bg-black/40 flex justify-between items-center cursor-pointer"
+                    onclick="toggleSection(this)">
+                    <h3 class="font-mystic text-lg text-white flex items-center gap-3">
+                        <i class="fa-solid fa-table-cells text-scarlet-500"></i> Reality Samples
+                    </h3>
+                    <i class="fa-solid fa-chevron-up text-scarlet-500 transition-transform duration-300"></i>
                 </div>
-                <i class="fa-solid fa-chevron-up"></i>
-            </div>
-            <div class="collapsible-body">
-                <div class="sample-table-wrapper">
-                    <table class="sample-table">
+                <div class="collapsible-content p-0 overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead>
-                            <tr>
+                            <tr
+                                class="text-xs uppercase tracking-wider text-gray-400 border-b border-scarlet-900/30 bg-black/20">
                                 {% for col in column_info|slice:":15" %}
-                                <th>{{ col.name }}</th>
+                                <th class="p-3 font-bold">{{ col.name }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-xs divide-y divide-scarlet-900/10 text-gray-300">
                             {% for row in sample_data %}
-                            <tr>
+                            <tr class="hover:bg-scarlet-900/10 transition-colors">
                                 {% for col in column_info|slice:":15" %}
-                                <td>
+                                <td class="p-3">
                                     {% if col.name in row %}
-                                    {% if row|get_item:col.name %}
                                     {{ row|get_item:col.name|truncatechars:30 }}
                                     {% else %}
-                                    <span class="text-muted">-</span>
-                                    {% endif %}
-                                    {% else %}
-                                    <span class="text-muted">-</span>
+                                    <span class="opacity-20">-</span>
                                     {% endif %}
                                 </td>
                                 {% endfor %}
@@ -266,286 +288,69 @@
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
 <style>
-    .report-workspace {
-        padding: var(--space-xl);
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
     }
 
-    .report-container {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-xl);
-        max-width: 1400px;
-        margin: 0 auto;
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
     }
 
-    .report-header {
-        padding: var(--space-xl);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(220, 38, 38, 0.4);
+        border-radius: 10px;
     }
 
-    .report-header h2 {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-    }
-
-    .report-actions {
-        display: flex;
-        gap: var(--space-sm);
-    }
-
-    .alerts-section {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-sm);
-    }
-
-    .alert {
-        padding: var(--space-md);
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        border-left: 4px solid;
-    }
-
-    .alert-error {
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
-    }
-
-    .alert-warning {
-        border-color: #f59e0b;
-        background: rgba(245, 158, 11, 0.1);
-    }
-
-    .alert-info {
-        border-color: #3b82f6;
-        background: rgba(59, 130, 246, 0.1);
-    }
-
-    .overview-section,
-    .columns-section,
-    .missing-section,
-    .correlation-section,
-    .sample-section {
-        padding: var(--space-xl);
-    }
-
-    .collapsible {
-        overflow: hidden;
-        transition: all var(--transition-base);
-    }
-
-    .collapsible-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        padding-bottom: var(--space-md);
-        border-bottom: 1px solid var(--glass-border);
-    }
-
-    .collapsible-body {
-        padding-top: var(--space-md);
-        animation: fadeInUp 0.3s ease-out;
-    }
-
-    .insight-chips {
-        margin-top: var(--space-md);
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--space-xs);
-    }
-
-    .insight-chip {
-        padding: 4px 10px;
-        border-radius: var(--radius-full);
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--glass-border);
-        font-size: 0.8rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .overview-section h3,
-    .columns-section h3,
-    .missing-section h3,
-    .correlation-section h3,
-    .sample-section h3 {
-        margin: 0 0 var(--space-xl) 0;
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--space-lg);
-    }
-
-    .stat-card {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-        padding: var(--space-lg);
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-md);
-    }
-
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .stat-icon i {
-        font-size: 1.5rem;
-    }
-
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
-
-    .stat-sublabel {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-top: 2px;
-    }
-
-    .columns-table-wrapper,
-    .sample-table-wrapper {
-        overflow-x: auto;
-    }
-
-    .columns-table,
-    .sample-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .columns-table th,
-    .sample-table th {
-        padding: var(--space-md);
-        text-align: left;
-        background: rgba(255, 255, 255, 0.05);
-        border-bottom: 2px solid var(--glass-border);
-        font-weight: 600;
-    }
-
-    .columns-table td,
-    .sample-table td {
-        padding: var(--space-md);
-        border-bottom: 1px solid var(--glass-border);
-    }
-
-    .badge {
-        padding: 2px 8px;
-        border-radius: var(--radius-sm);
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .missing-list {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-md);
-    }
-
-    .missing-item {
-        display: grid;
-        grid-template-columns: 200px 1fr 120px;
-        gap: var(--space-md);
-        align-items: center;
-    }
-
-    .missing-col-name {
-        font-weight: 600;
-    }
-
-    .missing-bar-wrapper {
-        height: 24px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: var(--radius-sm);
-        overflow: hidden;
-    }
-
-    .missing-bar {
-        height: 100%;
-        transition: width 0.3s ease;
-    }
-
-    .bar-critical {
-        background-color: #ef4444;
-    }
-
-    .bar-warning {
-        background-color: #f59e0b;
-    }
-
-    .bar-normal {
-        background-color: #3b82f6;
-    }
-
-    .missing-stats {
-        text-align: right;
-        font-size: 0.9rem;
-    }
-
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .missing-item {
-            grid-template-columns: 1fr;
-        }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(220, 38, 38, 0.7);
     }
 </style>
 
 <script>
-    function toggleSection(headerEl) {
-        const card = headerEl.closest(".collapsible");
-        const body = card.querySelector(".collapsible-body");
-        const icon = headerEl.querySelector("i.fa-chevron-up, i.fa-chevron-down");
+    function toggleSection(header) {
+        const content = header.nextElementSibling;
+        const icon = header.querySelector('.fa-chevron-up');
 
-        const isOpen = card.dataset.state !== "closed";
-        if (isOpen) {
-            body.style.display = "none";
-            card.dataset.state = "closed";
-            if (icon) {
-                icon.classList.remove("fa-chevron-up");
-                icon.classList.add("fa-chevron-down");
-            }
+        if (content.style.maxHeight === '0px') {
+            content.style.maxHeight = content.scrollHeight + "px";
+            content.style.opacity = "1";
+            content.style.padding = ""; // Reset padding if hidden
+            if (icon) icon.style.transform = "rotate(0deg)";
         } else {
-            body.style.display = "block";
-            card.dataset.state = "open";
-            if (icon) {
-                icon.classList.remove("fa-chevron-down");
-                icon.classList.add("fa-chevron-up");
-            }
+            // Store current height for animation
+            content.style.maxHeight = content.scrollHeight + "px";
+            // Wait a tick then collapse
+            setTimeout(() => {
+                content.style.maxHeight = "0px";
+                content.style.opacity = "0";
+                content.style.overflow = "hidden";
+                if (icon) icon.style.transform = "rotate(180deg)";
+            }, 10);
         }
     }
+
+    // Initialize open state (simplified for this design, default is open via CSS usually or JS init)
+    // Actually, let's make sure they start open properly or handle the lack of style attribute
+    document.querySelectorAll('.collapsible-content').forEach(el => {
+        el.style.maxHeight = el.scrollHeight + "px";
+        el.style.opacity = "1";
+    });
+
+    // Set width for missing value bars
+    document.querySelectorAll('.missing-bar').forEach(bar => {
+        const percentage = bar.getAttribute('data-percentage');
+        if (percentage) {
+            bar.style.width = percentage + '%';
+        }
+    });
+
 </script>
 
 {% if correlation_matrix and numeric_cols|length > 1 %}
@@ -571,22 +376,25 @@
         x: numericCols,
         y: numericCols,
         type: 'heatmap',
-        colorscale: 'RdBu',
+        colorscale: 'RdBu', // Red-Blue divergence fits the theme well enough (Scarlet vs Blue)
         zmid: 0,
         text: corrValues.map(row => row.map(v => v.toFixed(2))),
         texttemplate: '%{text}',
-        textfont: { size: 10 },
+        textfont: { size: 10, color: 'white' },
         hovertemplate: '%{x} vs %{y}<br>Correlation: %{z:.3f}<extra></extra>'
     };
 
     const layout = {
-        title: 'Correlation Matrix',
-        width: 800,
-        height: 600,
-        margin: { l: 150, r: 50, t: 50, b: 150 }
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#9ca3af', family: 'Inter, sans-serif' },
+        margin: { l: 50, r: 50, t: 30, b: 50 },
+        height: 400,
+        xaxis: { gridcolor: '#333' },
+        yaxis: { gridcolor: '#333' }
     };
 
-    Plotly.newPlot('correlation-chart', [trace], layout, { responsive: true });
+    Plotly.newPlot('correlation-chart', [trace], layout, { responsive: true, displayModeBar: false });
 </script>
 {% endif %}
 {% endblock %}

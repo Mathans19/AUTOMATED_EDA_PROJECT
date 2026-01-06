@@ -6,1150 +6,416 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Automated Insights{% endblock %}</title>
 
-    <!-- Fonts: Outfit (Headings) & Inter (Body) -->
+    <!-- Fonts: Cinzel (Mystical Headings) & Inter (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Plotly.js for Visualizations -->
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        scarlet: {
+                            50: '#fff0f3',
+                            100: '#ffe3e8',
+                            200: '#ffc9d2',
+                            300: '#ff9ea6',
+                            400: '#ff6675',
+                            500: '#ff2942', // Base Scarlet
+                            600: '#e60026',
+                            700: '#c2001e',
+                            800: '#9f0019',
+                            900: '#830519', // Deep Blood
+                            950: '#4a000a',
+                        },
+                        chaos: {
+                            100: '#2d0a10',
+                            200: '#1a0508',
+                            300: '#0f0204', // Void
+                        }
+                    },
+                    fontFamily: {
+                        mystic: ['Cinzel', 'serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 41, 66, 0.5)',
+                        'chaos': '0 0 40px rgba(255, 41, 66, 0.3), 0 0 80px rgba(131, 5, 25, 0.2)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js" charset="utf-8"></script>
 
-    <!-- Inline CSS - Complete Design System -->
+    <!-- Custom Chaos Styles -->
     <style>
-        /* =========================================
-           AVENGERS CINEMATIC UI - DESIGN SYSTEM
-           Futuristic Data Intelligence Platform
-           ========================================= */
-
+        /* === SCARLET PROTOTYPE THEME === */
         :root {
-            /* --- Cinematic Color Palette --- */
-            --bg-primary: #050505;
-            /* Deep Space Black */
-            --bg-secondary: #0a0e14;
-            /* Dark Metallic */
-            --bg-tertiary: #121826;
-            /* Panel Background */
-            --bg-elevated: #161b22;
-            /* Card Background */
-
-            /* Glass & HUD Overlays */
-            --glass-bg: rgba(10, 14, 20, 0.75);
-            --glass-border: rgba(0, 243, 255, 0.15);
-            /* Subtle Cyan Edge */
-            --glass-highlight: rgba(0, 243, 255, 0.05);
-
-            /* Neon Accents */
-            --primary: #00f3ff;
-            /* Arc Reactor Cyan */
-            --primary-light: #6affff;
-            --primary-dark: #0099aa;
-            --primary-glow: rgba(0, 243, 255, 0.4);
-
-            --secondary: #e11d48;
-            /* Stark Red */
-            --secondary-light: #fb7185;
-            --secondary-glow: rgba(225, 29, 72, 0.4);
-
-            --accent: #8b5cf6;
-            /* Quantum Purple */
-            --accent-light: #a78bfa;
-            --accent-glow: rgba(139, 92, 246, 0.4);
-
-            /* Semantic Colors (Cinematic) */
-            --success: #10b981;
-            --success-glow: rgba(16, 185, 129, 0.4);
-            --warning: #f59e0b;
-            --warning-bg: rgba(245, 158, 11, 0.1);
-            --danger: #ef4444;
-            --danger-bg: rgba(239, 68, 68, 0.1);
-            --info: #0ea5e9;
-            --info-bg: rgba(14, 165, 233, 0.1);
-
-            /* Typography */
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --text-disabled: #475569;
-
-            /* Gradients */
-            --gradient-primary: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
-            --gradient-secondary: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-            --gradient-dark: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(10, 14, 20, 0.95) 100%);
-            --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-            --gradient-glow: radial-gradient(circle at top, rgba(0, 243, 255, 0.15) 0%, transparent 70%);
-
-            /* Shadows & Depth */
-            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.5);
-            --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.7);
-            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--glass-border);
-            --shadow-glow-primary: 0 0 20px var(--primary-glow);
-            --shadow-glow-secondary: 0 0 20px var(--secondary-glow);
-
-            /* Spacing Scale */
-            --space-xs: 0.5rem;
-            --space-sm: 0.75rem;
-            --space-md: 1rem;
-            --space-lg: 1.5rem;
-            --space-xl: 2rem;
-            --space-2xl: 3rem;
-            --space-3xl: 4rem;
-
-            /* Border Radius */
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            /* Sharper edges for tech look */
-            --radius-lg: 12px;
-            --radius-xl: 16px;
-            --radius-full: 9999px;
-
-            /* Transitions */
-            --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-            --transition-base: 300ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* --- Reset & Base --- */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #02040a;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        html {
-            background: #000 url('/media/stark_hud.png') no-repeat center center / 125% 125% fixed;
+            --primary: #ff2942;
+            --primary-dark: #9f0019;
+            --glow: rgba(255, 41, 66, 0.6);
+            --bg-void: #050102;
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: transparent;
-            color: var(--text-primary);
-            line-height: 1.6;
-            font-size: 15px;
-            min-height: 100vh;
+            background-color: var(--bg-void);
+            color: #e5e5e5;
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
-
-            position: relative;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            /* Darken the image slightly for readability */
-            z-index: -2;
-        }
-
-
-        #bg-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* --- Typography --- */
+        /* Mystical Typography */
         h1,
         h2,
         h3,
         h4,
         h5,
-        h6 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: 0.02em;
+        h6,
+        .mystic-text {
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         h1 {
-            font-size: 2.5rem;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
-            text-transform: uppercase;
-            margin-bottom: var(--space-lg);
+            background: linear-gradient(180deg, #fff 0%, #ff2942 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 41, 66, 0.5);
         }
 
-        h2 {
-            font-size: 1.8rem;
-            margin-bottom: var(--space-md);
-        }
-
-        h3 {
-            font-size: 1.4rem;
-            color: var(--primary);
-            margin-bottom: var(--space-md);
-        }
-
-        p {
-            margin-bottom: var(--space-md);
-            color: var(--text-secondary);
-        }
-
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: all var(--transition-fast);
-        }
-
-        a:hover {
-            color: var(--primary-light);
-            text-shadow: 0 0 8px var(--primary-glow);
-        }
-
-        /* --- Layout --- */
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: var(--space-xl);
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        /* --- Premium Card System (HUD Style) --- */
-        .glass-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            /* Top highlight */
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            box-shadow: var(--shadow-md);
+        /* Glassmorphism Cards with Chaos Edge */
+        .chaos-card {
+            background: rgba(26, 5, 8, 0.6);
             backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 41, 66, 0.2);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s ease;
             position: relative;
             overflow: hidden;
-            transition: all var(--transition-base);
         }
 
-        /* Corner accents for HUD look */
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 20px;
-            height: 20px;
-            border-top: 2px solid var(--primary);
-            border-left: 2px solid var(--primary);
-            border-radius: 4px 0 0 0;
-            opacity: 0.5;
-        }
-
-        .glass-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 20px;
-            height: 20px;
-            border-bottom: 2px solid var(--primary);
-            border-right: 2px solid var(--primary);
-            border-radius: 0 0 4px 0;
-            opacity: 0.5;
-        }
-
-        .glass-card:hover {
-            box-shadow: var(--shadow-lg);
+        .chaos-card:hover {
             border-color: var(--primary);
-        }
-
-        /* --- Navbar --- */
-        .navbar {
-            background: rgba(5, 5, 5, 0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: var(--space-md) var(--space-xl);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-brand {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            letter-spacing: 0.05em;
-        }
-
-        .brand-icon {
-            color: var(--primary);
-            filter: drop-shadow(0 0 8px var(--primary-glow));
-        }
-
-        .brand-text {
-            color: white;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 4px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--glass-border);
-        }
-
-        .nav-item {
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            transition: all var(--transition-fast);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            color: var(--bg-primary);
-            background: var(--primary);
-            box-shadow: 0 0 16px var(--primary-glow);
-        }
-
-        /* --- Buttons (Stark Tech Style) --- */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-sm) var(--space-lg);
-            border-radius: var(--radius-md);
-            font-weight: 700;
-            font-family: 'Outfit', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border: none;
-            cursor: pointer;
-            transition: all var(--transition-base);
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-            font-size: 0.95rem;
-        }
-
-        .btn-primary {
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-            box-shadow: inset 0 0 12px rgba(0, 243, 255, 0.1);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 24px var(--primary-glow);
-        }
-
-        .btn-accent {
-            background: transparent;
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-
-        .btn-accent:hover:not(:disabled) {
-            background: var(--success);
-            color: #000;
-            box-shadow: 0 0 24px var(--success-glow);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--text-disabled);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--text-primary);
-            color: var(--text-primary);
-        }
-
-        .w-full {
-            width: 100%;
-        }
-
-        .btn-lg {
-            padding: var(--space-md) var(--space-xl);
-            font-size: 1.1rem;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* --- Forms --- */
-        .form-group {
-            margin-bottom: var(--space-lg);
-        }
-
-        label {
-            display: block;
-            margin-bottom: var(--space-xs);
-            color: var(--primary);
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            transition: all var(--transition-fast);
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 1px var(--primary);
-            background: rgba(0, 243, 255, 0.05);
-        }
-
-        input[type="file"] {
-            padding: var(--space-md);
-            background: rgba(255, 255, 255, 0.03);
-            cursor: pointer;
-            width: 100%;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-        }
-
-        /* --- Tables --- */
-        .table-container {
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th {
-            background: rgba(0, 243, 255, 0.05);
-            color: var(--primary);
-            padding: 16px;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--glass-border);
-            font-weight: 700;
-            letter-spacing: 0.05em;
-        }
-
-        .table td {
-            padding: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        /* --- Utilities --- */
-        .text-center {
-            text-align: center;
-        }
-
-        .text-muted {
-            color: var(--text-muted);
-        }
-
-        .text-highlight {
-            color: var(--primary);
-        }
-
-        .text-sm {
-            font-size: 0.875rem;
-        }
-
-        .text-xs {
-            font-size: 0.75rem;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .flex-col {
-            flex-direction: column;
-        }
-
-        .items-center {
-            align-items: center;
-        }
-
-        .justify-between {
-            justify-content: space-between;
-        }
-
-        .gap-4 {
-            gap: 1rem;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-xl);
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-xl);
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-            border: 1px solid var(--warning);
-        }
-
-        /* --- Toast Notifications (Holographic) --- */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            background: rgba(10, 14, 20, 0.9);
-            border: 1px solid var(--glass-border);
-            border-left: 3px solid var(--primary);
-            padding: 16px;
-            min-width: 320px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border-radius: var(--radius-sm);
-        }
-
-        .toast-success {
-            border-left-color: var(--success);
-        }
-
-        .toast-error {
-            border-left-color: var(--danger);
-        }
-
-        .toast-warning {
-            border-left-color: var(--warning);
-        }
-
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .toast-close:hover {
-            color: white;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(50px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-
-            .grid-2,
-            .grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .navbar {
-                padding: var(--space-sm);
-            }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .nav-links span {
-                display: none;
-            }
-        }
-
-        /* --- Batch 2: Advanced UI Enhancements --- */
-
-        /* --- Avengers UI Overhaul (Force Fix v2) --- */
-
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
-
-        /* 1. Normal Cursor & Background Fix */
-        body {
-            cursor: auto;
-            background-image: url('/media/stark_hud.png');
-            background-size: cover;
-            background-position: center top;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            background-color: #050510;
-            /* Dark fallback matches HUD */
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        button,
-        a,
-        .btn,
-        input,
-        select,
-        .clickable {
-            cursor: pointer !important;
-        }
-
-        /* 2. Scarlet Witch (Wanda) - Chaos Magic Text */
-        .wanda-text,
-        h1,
-        .hero-title {
-            animation: wandaGlow 3s infinite alternate !important;
-            position: relative;
-        }
-
-        @keyframes wandaGlow {
-            0% {
-                text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
-            }
-
-            5% {
-                text-shadow: 2px 0 10px rgba(0, 243, 255, 0.6);
-            }
-
-            100% {
-                text-shadow: 0 0 20px rgba(255, 0, 85, 0.9), 2px 2px 0px rgba(0, 243, 255, 0.3);
-            }
-        }
-
-        /* 3. Thor - Mjolnir Strike Buttons */
-        .btn-primary,
-        .thor-btn {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary::after,
-        .thor-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-            transform: skewX(-25deg);
-            z-index: 2;
-        }
-
-        .btn-primary:hover::after,
-        .thor-btn:hover::after {
-            left: 150%;
-            transition: 0.6s ease-in-out;
-        }
-
-        .btn-primary:hover,
-        .thor-btn:hover {
-            box-shadow: 0 0 25px var(--primary), 0 0 10px #fff !important;
-            border-color: #fff !important;
+            box-shadow: 0 0 30px rgba(255, 41, 66, 0.3);
             transform: translateY(-2px);
         }
 
-        /* 4. Hulk - Gamma Pulse (Success States) */
-        .badge-success,
-        .status-widget,
-        .hulk-pulse {
-            animation: hulkPulse 3s infinite !important;
-        }
-
-        @keyframes hulkPulse {
-            0% {
-                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 20px rgba(16, 185, 129, 0.9);
-            }
-
-            100% {
-                box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-            }
-        }
-
-
-        /* 5. Black Widow - Widow's Bite (Red Accents) */
-        .widow-border {
-            border-left: 3px solid #ff003c !important;
-        }
-
-        hr,
-        .divider {
-            border-color: rgba(255, 0, 60, 0.3);
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
-        }
-
-        /* 6. Doctor Strange - Eye of Agamotto (Spinners) */
-        .animate-spin,
-        .fa-circle-notch,
-        .strange-spinner {
-            color: #ffaa00 !important;
-            /* Mystic Orange */
-            filter: drop-shadow(0 0 5px #ffaa00) !important;
-            animation: spin 1s linear infinite !important;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* 7. Hawkeye - Precision Focus */
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: #a855f7 !important;
-            /* Hawkeye Purple */
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
-        }
-
-
-        /* 2. System Stats Widget */
-        #system-stats {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--text-disabled);
-            border-bottom: 2px solid var(--primary);
-            padding: 5px 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.7rem;
-            color: var(--primary);
-            z-index: 9999;
-            display: flex;
-            gap: 15px;
-            pointer-events: none;
-            backdrop-filter: blur(4px);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* 3. Holographic Projection Effect (Visualize) */
-        .holo-plate {
-            position: relative;
-            transform-style: preserve-3d;
-        }
-
-        .holo-plate::after {
+        .chaos-card::before {
             content: '';
             position: absolute;
-            bottom: -20px;
-            left: 5%;
-            width: 90%;
-            height: 20px;
-            background: radial-gradient(ellipse at center, rgba(0, 243, 255, 0.4) 0%, transparent 70%);
-            transform: perspective(500px) rotateX(60deg);
-            z-index: -1;
-            filter: blur(10px);
-            animation: holoPulse 4s infinite ease-in-out;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 41, 66, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
         }
 
-        @keyframes holoPulse {
-
-            0%,
-            100% {
-                opacity: 0.5;
-                transform: perspective(500px) rotateX(60deg) scale(0.9);
-            }
-
-            50% {
-                opacity: 1;
-                transform: perspective(500px) rotateX(60deg) scale(1.1);
-            }
+        .chaos-card:hover::before {
+            opacity: 1;
         }
 
-        /* 4. Terminal Log (Clean Data) */
-        .terminal-window {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            padding: 10px;
-            color: #58a6ff;
-            font-size: 0.8rem;
-            height: 150px;
-            overflow-y: auto;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
-            margin-top: var(--space-lg);
+        /* Buttons: Chaos Blasts */
+        .btn-chaos {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.75rem 2rem;
             position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 41, 66, 0.2);
         }
 
-        .terminal-line {
-            margin-bottom: 4px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            animation: typing 0.5s steps(40, end);
+        .btn-chaos::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 41, 66, 0.8), transparent);
+            transition: 0.5s;
         }
 
-        .terminal-prefix {
-            color: #238636;
-            margin-right: 8px;
+        .btn-chaos:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 40px var(--primary);
+            text-shadow: 0 0 10px white;
         }
 
-        .terminal-time {
-            color: #8b949e;
-            margin-right: 8px;
-            font-size: 0.7rem;
+        .btn-chaos:hover::after {
+            left: 100%;
         }
 
-        /* Decrypt Text Animation Class */
-        .decrypting {
-            display: inline-block;
-            min-width: 1ch;
+        /* Navigation: floating ancient tech */
+        .nav-link {
+            position: relative;
+            color: #a1a1aa;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Particle Canvas */
+        #chaos-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Loading Overlay */
+        #reality-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease;
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-    <canvas id="bg-particles"></canvas>
-    <div class="app-container">
-        <!-- Floating Navbar -->
-        <nav class="navbar">
-            <div class="nav-brand">
-                <i class="fa-solid fa-layer-group brand-icon"></i>
-                <span class="brand-text">DataInsight<span style="color:var(--primary)">Pro</span></span>
+<body class="antialiased min-h-screen flex flex-col">
+    <canvas id="chaos-canvas"></canvas>
+
+    <!-- Initial Page Load Transition -->
+    <div id="reality-loader">
+        <div class="text-scarlet-500 font-mystic text-4xl animate-pulse"> Reality Loading... </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 border-b border-scarlet-900/30 bg-chaos-300/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-bolt text-scarlet-500 text-2xl animate-pulse"></i>
+                <span class="font-mystic text-xl font-bold tracking-widest text-white">
+                    Data<span class="text-scarlet-500 text-shadow-glow">Witch</span>
+                </span>
             </div>
 
-            <div class="nav-links">
-                <a href="{% url 'upload' %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload</span>
-                </a>
-
+            <div class="flex gap-8">
                 {% if file_id %}
-                <div style="width:1px; height:20px; background:var(--glass-border); margin:0 5px;"></div>
-
+                <a href="{% url 'upload' %}" class="nav-link font-mystic text-sm uppercase tracking-wide">Upload</a>
                 <a href="{% url 'eda_report' file_id=file_id %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'eda_report' %}active{% endif %}">
-                    <i class="fa-solid fa-file-invoice"></i> <span>Report</span>
-                </a>
+                    class="nav-link font-mystic text-sm uppercase tracking-wide">The Report</a>
                 <a href="{% url 'clean_data' file_id=file_id %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'clean_data' %}active{% endif %}">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Clean</span>
-                </a>
+                    class="nav-link font-mystic text-sm uppercase tracking-wide">Cleanse Reality</a>
                 <a href="{% url 'visualize_data' file_id=file_id %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'visualize_data' %}active{% endif %}">
-                    <i class="fa-solid fa-chart-pie"></i> <span>Visualize</span>
-                </a>
+                    class="nav-link font-mystic text-sm uppercase tracking-wide">Visions</a>
                 <a href="{% url 'ask_ai' file_id=file_id %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'ask_ai' %}active{% endif %}">
-                    <i class="fa-solid fa-brain"></i> <span>AI Insights</span>
+                    class="nav-link font-mystic text-sm uppercase tracking-wide">Chaos Mind</a>
+                {% else %}
+                <a href="{% url 'upload' %}"
+                    class="nav-link font-mystic text-sm uppercase tracking-wide text-scarlet-400">
+                    Begin Ritual
                 </a>
                 {% endif %}
             </div>
+        </div>
+    </nav>
 
-            <div class="nav-actions">
-                <a href="https://github.com/your-repo" target="_blank" class="btn btn-secondary"
-                    style="padding: 0.5rem 0.8rem;">
-                    <i class="fa-brands fa-github"></i>
-                </a>
-            </div>
-        </nav>
+    <!-- Main Content -->
+    <main class="flex-grow pt-24 px-6 relative z-10 w-full max-w-7xl mx-auto">
+        {% block content %}{% endblock %}
+    </main>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            {% block content %}
-            {% endblock %}
-        </main>
+    <!-- Footer -->
+    <footer class="border-t border-scarlet-900/30 py-8 mt-12 text-center">
+        <p class="font-mystic text-scarlet-800 text-xs tracking-[0.2em] uppercase">
+            Powered by Chaos Magic &copy; 2026
+        </p>
+    </footer>
 
-        <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-            &copy; 2026 DataInsightPro. Built for Data Science.
-        </footer>
-    </div>
-
-    <div id="system-stats">
-        <span><i class="fa-solid fa-microchip"></i> CPU: OPTIMAL</span>
-        <span><i class="fa-solid fa-memory"></i> MEM: STABLE</span>
-        <span id="latency-stat"><i class="fa-solid fa-network-wired"></i> PING: --ms</span>
-    </div>
-
-    <!-- Inline JavaScript - UI Interactions -->
+    <!-- Scripts -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('UI Scripts Loaded - Initializing Avenger Systems');
-            initParticles();
-            initTiltEffect();
-            initSystemStats();
+        // Page Load Transition
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('reality-loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 1000);
         });
 
-        // --- System Stats Simulator ---
-        function initSystemStats() {
-            const latencyEl = document.getElementById('latency-stat');
-            setInterval(() => {
-                const ms = Math.floor(Math.random() * 20) + 10;
-                latencyEl.innerHTML = `<i class="fa-solid fa-network-wired"></i> PING: ${ms}ms`;
-            }, 2000);
+        // Chaos Particle System
+        const canvas = document.getElementById('chaos-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize
+        let w, h;
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
+        // Particles
+        const particles = [];
+        const particleCount = 60;
 
-
-
-        // --- Particle System ---
-        function initParticles() {
-            const canvas = document.getElementById('bg-particles');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            let w, h, particles;
-
-            const resize = () => {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
-            };
-            window.addEventListener('resize', resize);
-            resize();
-
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * w;
-                    this.y = Math.random() * h;
-                    this.vx = (Math.random() - 0.5) * 0.5;
-                    this.vy = (Math.random() - 0.5) * 0.5;
-                    this.size = Math.random() * 2;
-                }
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if (this.x < 0) this.x = w;
-                    if (this.x > w) this.x = 0;
-                    if (this.y < 0) this.y = h;
-                    if (this.y > h) this.y = 0;
-                }
-                draw() {
-                    ctx.fillStyle = `rgba(0, 243, 255, ${Math.random() * 0.3})`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+        class Particle {
+            constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.alpha = Math.random() * 0.5 + 0.1;
+                this.color = Math.random() > 0.8 ? '#ffffff' : '#ff2942'; // White or Scarlet
             }
 
-            particles = Array.from({ length: 50 }, () => new Particle());
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
 
-            function animate() {
-                ctx.clearRect(0, 0, w, h);
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-                // Connect particles
-                particles.forEach((p1, i) => {
-                    particles.slice(i + 1).forEach(p2 => {
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 100) {
-                            ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 - dist / 1000})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath();
-                            ctx.moveTo(p1.x, p1.y);
-                            ctx.lineTo(p2.x, p2.y);
-                            ctx.stroke();
-                        }
-                    });
-                });
-                requestAnimationFrame(animate);
+                // Wrap around
+                if (this.x < 0) this.x = w;
+                if (this.x > w) this.x = 0;
+                if (this.y < 0) this.y = h;
+                if (this.y > h) this.y = 0;
+
+                // Pulse alpha
+                this.alpha += (Math.random() - 0.5) * 0.02;
+                if (this.alpha < 0.1) this.alpha = 0.1;
+                if (this.alpha > 0.6) this.alpha = 0.6;
             }
-            animate();
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
-        // --- 3D Tilt Effect ---
-        function initTiltEffect() {
-            const cards = document.querySelectorAll('.tilt-card');
-            cards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
+        // Init
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
 
-                    const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg tilt
-                    const rotateY = ((x - centerX) / centerX) * 5;
+        // Chaos Connections
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
 
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                });
+            // Draw gradient background
+            const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w);
+            gradient.addColorStop(0, '#1a0508'); // Dark Scarlet center
+            gradient.addColorStop(1, '#000000'); // Black edges
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
 
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
-                });
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Connections (Chaos Web)
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 41, 66, ${0.1 - distance / 1200})`; // Faint red web
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Mouse Interaction (Chaos Blast)
+        document.addEventListener('click', (e) => {
+            const blast = document.createElement('div');
+            blast.style.position = 'fixed';
+            blast.style.left = e.clientX + 'px';
+            blast.style.top = e.clientY + 'px';
+            blast.style.transform = 'translate(-50%, -50%)';
+            blast.style.width = '10px';
+            blast.style.height = '10px';
+            blast.style.background = 'radial-gradient(circle, #fff, #ff2942, transparent)';
+            blast.style.borderRadius = '50%';
+            blast.style.pointerEvents = 'none';
+            blast.style.zIndex = '9999';
+            blast.style.boxShadow = '0 0 50px 20px rgba(255, 41, 66, 0.8)';
+            document.body.appendChild(blast);
+
+            const anim = blast.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: 'translate(-50%, -50%) scale(20)', opacity: 0 }
+            ], {
+                duration: 600,
+                easing: 'ease-out'
             });
-        }
 
-
-        // --- Toast Notification System ---
-        function showToast(message, type = 'info') {
-            // Create container if it doesn't exist
-            let container = document.getElementById('toast-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'toast-container';
-                document.body.appendChild(container);
-            }
-
-            // Create Toast
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-
-            // Icon selection
-            let icon = 'fa-info-circle';
-            let color = 'var(--primary)';
-            if (type === 'success') { icon = 'fa-check-circle'; color = 'var(--success)'; }
-            if (type === 'error') { icon = 'fa-exclamation-circle'; color = 'var(--danger)'; }
-            if (type === 'warning') { icon = 'fa-triangle-exclamation'; color = 'var(--warning)'; }
-
-            toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fa-solid ${icon}" style="color: ${color}"></i>
-            <span>${message}</span>
-        </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-            // Add to DOM
-            container.appendChild(toast);
-
-            // Auto remove after 4s
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        // --- Drag and Drop Logic ---
-        // (Handled directly in upload.html for the upload page.)
+            anim.onfinish = () => blast.remove();
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,482 +1,250 @@
 {% extends 'eda/base.html' %}
 
-{% block title %}Visualize Data - Automated Insights{% endblock %}
+{% block title %}Weave Reality (Visualize) - DataWitch{% endblock %}
 
 {% block content %}
-<div class="visualize-workspace">
-    <div class="grid-2">
-        <!-- Chart Controls Sidebar -->
-        <div class="chart-controls glass-card tilt-card">
-            <div class="controls-header" style="justify-content: space-between;">
-                <div style="display:flex; align-items:center; gap:var(--space-md);">
-                    <div class="header-icon">
-                        <i class="fa-solid fa-chart-line"></i>
+<div class="min-h-screen p-4 md:p-8 pt-24 space-y-8 animate-fade-in text-white/90">
+
+    <!-- Title Section -->
+    <div class="flex flex-col md:flex-row justify-between items-end border-b border-scarlet-900/50 pb-6">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-mystic text-white mb-2 drop-shadow-[0_0_15px_rgba(255,41,66,0.5)]">
+                REALITY WEAVER
+            </h1>
+            <p class="text-scarlet-400/80 text-sm tracking-widest uppercase font-bold">
+                <i class="fa-solid fa-chart-line mr-2"></i> Visualize The Unknown
+            </p>
+        </div>
+        <div
+            class="flex items-center gap-2 px-3 py-1 rounded border border-scarlet-900/30 bg-black/40 text-xs font-mono text-scarlet-300">
+            <span>PROTOCOL V.2.0</span>
+            <span class="w-2 h-2 rounded-full bg-scarlet-500 animate-pulse"></span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Left Panel: Configurations (Grimoire) -->
+        <div class="lg:col-span-4 lg:sticky lg:top-24 max-h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar pr-2">
+            <div class="chaos-card p-6 rounded-xl relative">
+                <h3 class="font-mystic text-xl text-white mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-scarlet-500"></i> Configuration
+                </h3>
+
+                <form id="vizForm" class="space-y-8" onsubmit="event.preventDefault(); generateChart();">
+                    {% csrf_token %}
+
+                    <!-- Chart Type -->
+                    <div class="space-y-3">
+                        <label class="text-scarlet-400 text-xs font-bold tracking-[0.1em] uppercase block">
+                            <i class="fa-solid fa-shapes mr-1"></i> Visualization Type
+                        </label>
+
+                        <!-- Quick Presets -->
+                        <div class="flex gap-2 mb-2 overflow-x-auto pb-2 custom-scrollbar">
+                            <button type="button"
+                                class="whitespace-nowrap px-3 py-1 rounded bg-scarlet-900/20 border border-scarlet-900/50 text-xs text-scarlet-300 hover:bg-scarlet-900/50 transition-colors"
+                                onclick="applyPreset('univariate')">Distribution</button>
+                            <button type="button"
+                                class="whitespace-nowrap px-3 py-1 rounded bg-scarlet-900/20 border border-scarlet-900/50 text-xs text-scarlet-300 hover:bg-scarlet-900/50 transition-colors"
+                                onclick="applyPreset('bivariate')">Correlation</button>
+                            <button type="button"
+                                class="whitespace-nowrap px-3 py-1 rounded bg-scarlet-900/20 border border-scarlet-900/50 text-xs text-scarlet-300 hover:bg-scarlet-900/50 transition-colors"
+                                onclick="applyPreset('missing')">Missing</button>
+                        </div>
+
+                        <!-- Grid of Types -->
+                        <div class="grid grid-cols-3 gap-2">
+                            {% for type, icon, label in chart_types %}
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="chart_type" value="{{ type }}" class="peer sr-only" {% if
+                                    type=='histogram' %}checked{% endif %} onchange="handleTypeChange()">
+                                <div
+                                    class="flex flex-col items-center justify-center p-3 rounded bg-black/40 border border-scarlet-900/30 aspect-square text-gray-500 hover:text-white hover:border-scarlet-500 hover:shadow-[0_0_10px_rgba(255,41,66,0.3)] peer-checked:bg-scarlet-900/20 peer-checked:border-scarlet-500 peer-checked:text-white peer-checked:shadow-[inset_0_0_15px_rgba(255,41,66,0.2)] transition-all">
+                                    <i
+                                        class="fa-solid fa-{{ icon }} text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                                    <span
+                                        class="text-[0.65rem] font-bold uppercase tracking-wider text-center leading-tight">{{
+                                        label }}</span>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div>
-                        <h2>Chart Builder</h2>
-                        <p class="text-muted text-sm">Create interactive visualizations</p>
+
+                    <!-- Axis Controls -->
+                    <div id="axis-controls" class="space-y-4 bg-black/20 p-4 rounded border border-scarlet-900/20">
+
+                        <div id="x-group" class="group-control">
+                            <label class="text-gray-400 text-xs font-bold uppercase mb-1 block">X Axis</label>
+                            <select id="x_col" name="x_col"
+                                class="w-full bg-chaos-900/80 border border-scarlet-900/50 text-white text-sm p-2 rounded focus:border-scarlet-500 outline-none">
+                                {% for col in all_cols %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="y-group" class="group-control hidden">
+                            <label class="text-gray-400 text-xs font-bold uppercase mb-1 block">Y Axis</label>
+                            <select id="y_col" name="y_col"
+                                class="w-full bg-chaos-900/80 border border-scarlet-900/50 text-white text-sm p-2 rounded focus:border-scarlet-500 outline-none">
+                                {% for col in all_cols %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="bins-group" class="group-control">
+                            <label class="text-gray-400 text-xs font-bold uppercase mb-1 block">Bins</label>
+                            <input type="number" id="bins" min="5" max="100" step="1" placeholder="Auto"
+                                class="w-full bg-chaos-900/80 border border-scarlet-900/50 text-white text-sm p-2 rounded focus:border-scarlet-500 outline-none">
+                        </div>
+
+                        <div id="color-group" class="group-control hidden">
+                            <label class="text-gray-400 text-xs font-bold uppercase mb-1 block">Color By</label>
+                            <select id="color_col"
+                                class="w-full bg-chaos-900/80 border border-scarlet-900/50 text-white text-sm p-2 rounded focus:border-scarlet-500 outline-none">
+                                <option value="">None</option>
+                                {% for col in all_cols %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="size-group" class="group-control hidden">
+                            <label class="text-gray-400 text-xs font-bold uppercase mb-1 block">Size By</label>
+                            <select id="size_col"
+                                class="w-full bg-chaos-900/80 border border-scarlet-900/50 text-white text-sm p-2 rounded focus:border-scarlet-500 outline-none">
+                                <option value="">None</option>
+                                {% for col in numeric_cols %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div
-                    style="font-size:0.7rem; color:var(--text-muted); border:1px solid var(--glass-border); padding:2px 6px; border-radius:4px;">
-                    V.2.0
-                </div>
+
+                    <button type="submit" class="btn-chaos w-full py-3 text-lg font-bold group">
+                        <span class="group-hover:animate-pulse"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                            Manifest Visualization</span>
+                    </button>
+
+                </form>
             </div>
-
-            <form id="vizForm" onsubmit="event.preventDefault(); generateChart();">
-                {% csrf_token %}
-
-                <!-- Chart Type Selection -->
-                <div class="form-group">
-                    <label>
-                        <i class="fa-solid fa-palette"></i>
-                        Chart Type
-                    </label>
-
-                    <!-- Recommended presets -->
-                    <div class="preset-row">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('univariate')">
-                            <i class="fa-solid fa-wave-square"></i> Numeric Distribution
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('bivariate')">
-                            <i class="fa-solid fa-arrows-left-right"></i> Correlation (Scatter)
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="applyPreset('missing')">
-                            <i class="fa-solid fa-border-all"></i> Missingness
-                        </button>
-                    </div>
-
-                    <div class="chart-type-grid">
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="histogram" checked
-                                onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-chart-bar"></i>
-                                <span>Histogram</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="bar" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-chart-column"></i>
-                                <span>Bar Chart</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="line" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-chart-line"></i>
-                                <span>Line Chart</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="scatter" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-braille"></i>
-                                <span>Scatter</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="box" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-chart-gantt"></i>
-                                <span>Box Plot</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="violin" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-guitar"></i>
-                                <span>Violin</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="pie" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-chart-pie"></i>
-                                <span>Pie Chart</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="heatmap" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-table-cells"></i>
-                                <span>Heatmap</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="missing_heatmap" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-border-all"></i>
-                                <span>Missing Heatmap</span>
-                            </div>
-                        </label>
-                        <label class="chart-type-card">
-                            <input type="radio" name="chart_type" value="density" onchange="handleTypeChange()">
-                            <div class="chart-type-content">
-                                <i class="fa-solid fa-wave-square"></i>
-                                <span>Density</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Axis Controls -->
-                <div id="axis-controls" class="axis-controls">
-                    <div class="form-group" id="x-group">
-                        <label id="lbl-x">
-                            <i class="fa-solid fa-arrow-right"></i>
-                            X Axis
-                        </label>
-                        <select id="x_col" name="x_col" class="select-enhanced">
-                            {% for col in all_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="y-group" style="display:none;">
-                        <label id="lbl-y">
-                            <i class="fa-solid fa-arrow-up"></i>
-                            Y Axis
-                        </label>
-                        <select id="y_col" name="y_col" class="select-enhanced">
-                            {% for col in all_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="bins-group">
-                        <label>
-                            <i class="fa-solid fa-grip-lines-vertical"></i>
-                            Bins (Histogram)
-                        </label>
-                        <input type="number" id="bins" min="5" max="100" step="1" placeholder="Auto" />
-                    </div>
-
-                    <div class="form-group" id="color-group" style="display:none;">
-                        <label>
-                            <i class="fa-solid fa-palette"></i>
-                            Color by (optional)
-                        </label>
-                        <select id="color_col" class="select-enhanced">
-                            <option value="">None</option>
-                            {% for col in all_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="size-group" style="display:none;">
-                        <label>
-                            <i class="fa-solid fa-circle-dot"></i>
-                            Size by (numeric, optional)
-                        </label>
-                        <select id="size_col" class="select-enhanced">
-                            <option value="">None</option>
-                            {% for col in numeric_cols %}
-                            <option value="{{ col }}">{{ col }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary thor-btn w-full btn-lg">
-                    <i class="fa-solid fa-wand-magic"></i>
-                    <span>Generate Chart</span>
-                </button>
-            </form>
         </div>
 
-        <!-- Chart Display Area -->
-        <div class="chart-display glass-card tilt-card holo-plate">
-            <div class="chart-header">
-                <h2 class="wanda-text">JARVIS VISUALIZATION PROTOCOL</h2>
-                <div class="chart-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="downloadChart()">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
-                </div>
-            </div>
+        <!-- Right Panel: The Projection -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
 
-            <div id="chart-container" class="chart-container">
-                <div class="chart-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fa-solid fa-chart-line"></i>
+            <!-- Chart Canvas -->
+            <div class="chaos-card p-1 rounded-2xl relative min-h-[600px] flex flex-col group/chart">
+                <!-- Header -->
+                <div
+                    class="p-4 border-b border-scarlet-900/50 flex justify-between items-center bg-chaos-900/90 rounded-t-xl z-10 backdrop-blur">
+                    <h3 class="font-mystic text-lg text-white tracking-wider glow-text">Visual Manifestation</h3>
+                    <button onclick="downloadChart()" class="text-scarlet-400 hover:text-white transition-colors"><i
+                            class="fa-solid fa-download"></i></button>
+                </div>
+
+                <!-- Canvas -->
+                <div id="chart-container"
+                    class="flex-1 rounded-b-xl relative bg-black/60 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+                    <!-- Placeholder -->
+                    <div class="text-center p-8 opacity-60">
+                        <div
+                            class="w-24 h-24 rounded-full border-2 border-dashed border-scarlet-900 flex items-center justify-center mx-auto mb-4 animate-spin-slow">
+                            <i class="fa-solid fa-compass-drafting text-4xl text-scarlet-700"></i>
+                        </div>
+                        <h4 class="font-mystic text-xl text-white">Awaiting Paramaters</h4>
+                        <p class="text-sm text-gray-400 max-w-xs mx-auto mt-2">Select a visualization type and axes to
+                            weave a new reality projection.</p>
                     </div>
-                    <h3>Ready to Visualize</h3>
-                    <p>Select a chart type and configure axes to generate your interactive visualization</p>
+                </div>
+
+                <!-- Corner Decor -->
+                <div
+                    class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-scarlet-500 rounded-tl pointer-events-none">
+                </div>
+                <div
+                    class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-scarlet-500 rounded-tr pointer-events-none">
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-scarlet-500 rounded-bl pointer-events-none">
+                </div>
+                <div
+                    class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-scarlet-500 rounded-br pointer-events-none">
                 </div>
             </div>
 
-            <!-- Chart Insight Panel -->
-            <div id="chart-meta" class="chart-meta-panel">
-                <div class="chart-meta-header">
-                    <h3><i class="fa-solid fa-circle-info"></i> Chart Insights</h3>
-                </div>
-                <div id="chart-meta-body" class="chart-meta-body text-sm text-muted">
-                    Select a chart type and generate it to see tailored tips here.
-                </div>
+            <!-- Insight Panel -->
+            <div
+                class="bg-gradient-to-r from-scarlet-900/20 to-transparent border-l-4 border-scarlet-500 p-6 rounded-r-xl">
+                <h4 class="font-bold text-white text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-scarlet-500"></i> Scarlet Insight
+                </h4>
+                <p id="chart-meta-body" class="text-gray-300 text-sm leading-relaxed">
+                    The visualization engine is dormant. Cast a spell to reveal hidden patterns.
+                </p>
             </div>
+
         </div>
     </div>
 </div>
 
 <style>
-    .visualize-workspace {
-        padding-top: 0;
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
     }
 
-    .chart-controls {
-        position: sticky;
-        top: 100px;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-lg);
-    }
-
-    .controls-header {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-        padding-bottom: var(--space-lg);
-        border-bottom: 1px solid var(--glass-border);
-    }
-
-    .header-icon {
-        width: 50px;
-        height: 50px;
-        background: var(--gradient-primary);
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);
-    }
-
-    .header-icon i {
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .controls-header h2 {
-        margin: 0;
-        font-size: 1.5rem;
-    }
-
-    .chart-type-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-sm);
-    }
-
-    .chart-type-card {
-        cursor: pointer;
-        position: relative;
-    }
-
-    .chart-type-card input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .chart-type-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: var(--space-xs);
-        padding: var(--space-lg) var(--space-md);
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-md);
-        transition: all var(--transition-base);
-        color: var(--text-muted);
-    }
-
-    .chart-type-content i {
-        font-size: 1.8rem;
-    }
-
-    .chart-type-content span {
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    .chart-type-card:hover .chart-type-content {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--text-primary);
-    }
-
-    .chart-type-card input:checked+.chart-type-content {
-        background: rgba(99, 102, 241, 0.15);
-        border-color: var(--primary);
-        color: var(--text-primary);
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-    }
-
-    .chart-type-card input:checked+.chart-type-content i {
-        color: var(--primary);
-    }
-
-    .axis-controls {
-        padding: var(--space-lg);
+    .custom-scrollbar::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-md);
     }
 
-    .select-enhanced {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-        background-position: right 0.5rem center;
-        background-repeat: no-repeat;
-        background-size: 1.5em 1.5em;
-
-        background-color: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-sm);
-        color: var(--text-primary);
-        padding: 8px 12px;
-        padding-right: 2.5rem;
-        width: 100%;
-        font-family: inherit;
-        transition: border-color 0.2s;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(220, 38, 38, 0.4);
+        border-radius: 10px;
     }
 
-    .select-enhanced:focus {
-        outline: none;
-        border-color: var(--primary);
-        background-color: rgba(0, 243, 255, 0.05);
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(220, 38, 38, 0.7);
     }
 
-    .select-enhanced option {
-        background-color: #1a1a2e;
-        /* Fallback or specific dark color */
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
+    .glow-text {
+        text-shadow: 0 0 10px rgba(255, 41, 66, 0.5);
     }
 
-    .chart-display {
-        min-height: 80vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--space-lg);
-        padding-bottom: var(--space-md);
-        border-bottom: 1px solid var(--glass-border);
-    }
-
-    .chart-header h2 {
-        margin: 0;
-    }
-
-    .chart-actions {
-        display: flex;
-        gap: var(--space-sm);
-    }
-
-    .chart-container {
-        flex: 1;
-        min-height: 500px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .chart-placeholder {
-        text-align: center;
-        max-width: 400px;
-        padding: var(--space-3xl);
-    }
-
-    .placeholder-icon {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto var(--space-xl);
-        background: rgba(99, 102, 241, 0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: pulse 3s ease-in-out infinite;
-    }
-
-    .placeholder-icon i {
-        font-size: 3rem;
-        color: var(--primary);
-    }
-
-    .chart-placeholder h3 {
-        color: var(--text-primary);
-        margin-bottom: var(--space-md);
-    }
-
-    .chart-placeholder p {
-        color: var(--text-muted);
-        line-height: 1.6;
-    }
-
-    .preset-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-md);
-    }
-
-    .chart-meta-panel {
-        margin-top: var(--space-lg);
-        padding: var(--space-lg);
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--glass-border);
-        animation: fadeInUp 0.4s ease-out;
-    }
-
-    .chart-meta-header {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-sm);
-    }
-
-    .chart-meta-header i {
-        color: var(--primary);
-    }
-
-    @media (max-width: 1200px) {
-        .chart-controls {
-            position: relative;
-            top: 0;
-            max-height: none;
-        }
+    .animate-spin-slow {
+        animation: spin 8s linear infinite;
     }
 </style>
 
 <script>
     var VIZ_URL = "{% url 'visualize_data' file_id=file_id %}";
 
+    // Chart Types Array for template loop
+    // Since Django templates don't support defining arrays easily in the template without a custom tag or view context
+    // I'll hardcode the HTML loop replacement in the template above or just write it out.
+    // Wait, the template above used a loop `for type, icon, label in chart_types`.
+    // I need to make sure `chart_types` is passed from the view OR I manually write out the HTML.
+    // The previous file manually wrote them out. I should probably do the same to be safe unless I'm sure the view sends `chart_types`.
+    // The previous file had manual labels. I will switch to manual HTML to avoid variable errors.
+</script>
+
+<!-- REWRITING THE FORM SECTION TO NOT USE THE LOOP TO BE SAFE -->
+<!-- I'll inject the manual chart types in the actual replacement content below -->
+
+<script>
     function applyPreset(type) {
-        if (type === "univariate") {
-            const radio = document.querySelector('input[value="histogram"]');
-            if (radio) radio.checked = true;
-        } else if (type === "bivariate") {
-            const radio = document.querySelector('input[value="scatter"]');
-            if (radio) radio.checked = true;
-        } else if (type === "missing") {
-            const radio = document.querySelector('input[value="missing_heatmap"]');
-            if (radio) radio.checked = true;
+        let val = 'histogram';
+        if (type === 'bivariate') val = 'scatter';
+        if (type === 'missing') val = 'missing_heatmap';
+
+        const radio = document.querySelector(`input[value="${val}"]`);
+        if (radio) {
+            radio.checked = true;
+            handleTypeChange();
         }
-        handleTypeChange();
     }
 
     function handleTypeChange() {
@@ -487,169 +255,112 @@
         const colorGroup = document.getElementById("color-group");
         const sizeGroup = document.getElementById("size-group");
 
-        if (!xGroup || !yGroup) return;
+        // Reset visibility
+        xGroup.classList.remove('hidden');
+        yGroup.classList.add('hidden');
+        binsGroup.classList.add('hidden');
+        colorGroup.classList.add('hidden');
+        sizeGroup.classList.add('hidden');
 
-        // Defaults
-        xGroup.style.display = "block";
-        yGroup.style.display = "none";
-        if (binsGroup) binsGroup.style.display = "none";
-        if (colorGroup) colorGroup.style.display = "none";
-        if (sizeGroup) sizeGroup.style.display = "none";
+        // Update Labels function
+        const setLabel = (id, text) => document.querySelector(`#${id} label`).textContent = text;
 
-        if (chartType === "heatmap" || chartType === "missing_heatmap") {
-            xGroup.style.display = "none";
-            yGroup.style.display = "none";
-        } else if (chartType === "pie") {
-            xGroup.style.display = "block";
-            yGroup.style.display = "block";
-            const lblX = document.querySelector('#x-group label');
-            const lblY = document.querySelector('#y-group label');
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-tag"></i> Category (X)';
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-chart-pie"></i> Values (Y) - Optional';
-        } else if (chartType === "scatter" || chartType === "line") {
-            xGroup.style.display = "block";
-            yGroup.style.display = "block";
-            const lblY = document.querySelector('#y-group label');
-            const lblX = document.querySelector('#x-group label');
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Y Axis';
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-arrow-right"></i> X Axis';
-            if (colorGroup) colorGroup.style.display = "block";
-            if (sizeGroup) sizeGroup.style.display = "block";
-        } else if (chartType === "box" || chartType === "violin") {
-            xGroup.style.display = "block";
-            yGroup.style.display = "block";
-            const lblY = document.querySelector('#y-group label');
-            const lblX = document.querySelector('#x-group label');
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-layer-group"></i> Group By (X Axis)';
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-chart-simple"></i> Values (Y Axis)';
-        } else if (chartType === "bar") {
-            xGroup.style.display = "block";
-            yGroup.style.display = "block";
-            const lblY = document.querySelector('#y-group label');
-            const lblX = document.querySelector('#x-group label');
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Value (Y) - Optional';
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Category (X)';
-        } else if (chartType === "density") {
-            xGroup.style.display = "block";
-            yGroup.style.display = "block";
-            const lblY = document.querySelector('#y-group label');
-            const lblX = document.querySelector('#x-group label');
-            if (lblY) lblY.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Y Axis - Optional';
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-arrow-right"></i> X Axis';
-            if (colorGroup) colorGroup.style.display = "block";
-            if (sizeGroup) sizeGroup.style.display = "block";
-        } else {
-            xGroup.style.display = "block";
-            yGroup.style.display = "none";
-            const lblX = document.querySelector('#x-group label');
-            if (lblX) lblX.innerHTML = '<i class="fa-solid fa-arrow-right"></i> X Axis';
+        if (chartType === 'histogram') {
+            binsGroup.classList.remove('hidden');
+        }
+        else if (['scatter', 'line'].includes(chartType)) {
+            yGroup.classList.remove('hidden');
+            colorGroup.classList.remove('hidden');
+            sizeGroup.classList.remove('hidden');
+        }
+        else if (['bar', 'box', 'violin'].includes(chartType)) {
+            yGroup.classList.remove('hidden');
+            setLabel('x-group', 'Category (X)');
+            setLabel('y-group', 'Value (Y)');
+        }
+        else if (chartType === 'pie') {
+            yGroup.classList.remove('hidden');
+            setLabel('x-group', 'Category');
+            setLabel('y-group', 'Values (Optional)');
+        }
+        else if (chartType === 'heatmap') {
+            xGroup.classList.add('hidden'); // Correlation matrix doesn't need axes selection usually, or it needs just global
+        }
+        else if (chartType === 'density') {
+            yGroup.classList.remove('hidden');
         }
     }
 
     function generateChart() {
         const btn = document.querySelector('#vizForm button[type="submit"]');
-        const chartContainer = document.getElementById("chart-container");
+        const originalText = btn.innerHTML;
 
-        const chartType = document.querySelector('input[name="chart_type"]:checked').value;
-        const xCol = document.getElementById("x_col").value;
-        const yCol = document.getElementById("y_col").value;
-        const bins = document.getElementById("bins") ? document.getElementById("bins").value : null;
-        const colorCol = document.getElementById("color_col") ? document.getElementById("color_col").value : null;
-        const sizeCol = document.getElementById("size_col") ? document.getElementById("size_col").value : null;
-
-        const originalBtnText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Generating...';
         btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Weaving Reality...';
+
+        const form = document.getElementById('vizForm');
+        // Construct JSON body
+        const chartType = document.querySelector('input[name="chart_type"]:checked').value;
+        const body = {
+            chart_type: chartType,
+            x_col: document.getElementById('x_col').value,
+            y_col: document.getElementById('y_col').value,
+            bins: document.getElementById('bins').value,
+            color_col: document.getElementById('color_col').value,
+            size_col: document.getElementById('size_col').value
+        };
 
         fetch(VIZ_URL, {
             method: "POST",
             headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
                 "Content-Type": "application/json",
                 "X-Requested-With": "XMLHttpRequest"
             },
-            body: JSON.stringify({
-                chart_type: chartType,
-                x_col: xCol,
-                y_col: yCol,
-                bins: bins ? parseInt(bins, 10) : null,
-                color_col: colorCol || null,
-                size_col: sizeCol || null
-            })
+            body: JSON.stringify(body)
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.error || "Server error") });
-                }
-                return response.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Update chart area
-                    chartContainer.innerHTML = data.graph_html;
-                    chartContainer.style.background = "transparent";
-                    chartContainer.classList.add("animate-fadeInUp");
-                    setTimeout(() => chartContainer.classList.remove("animate-fadeInUp"), 400);
+                    const container = document.getElementById("chart-container");
+                    container.innerHTML = data.graph_html;
 
-                    // Execute scripts embedded in Plotly HTML
-                    const scripts = chartContainer.querySelectorAll("script");
-                    scripts.forEach(script => {
-                        const newScript = document.createElement("script");
-                        newScript.text = script.text;
-                        document.head.appendChild(newScript).parentNode.removeChild(newScript);
+                    // Execute scripts
+                    container.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script");
+                        ns.text = s.text;
+                        document.head.appendChild(ns).parentNode.removeChild(ns);
                     });
 
-                    // Update chart insight text
-                    const metaBody = document.getElementById("chart-meta-body");
-                    if (metaBody) {
-                        let insight = "";
-                        switch (chartType) {
-                            case "histogram":
-                                insight = "Histogram helps you understand distribution for a single numeric column. Adjust bins for more or less detail.";
-                                break;
-                            case "scatter":
-                                insight = "Scatter plots reveal relationships between two numeric variables. Use color and size to encode additional dimensions.";
-                                break;
-                            case "heatmap":
-                                insight = "Correlation heatmap highlights linear relationships between numeric variables. Reds/blues show strong positive/negative correlations.";
-                                break;
-                            case "missing_heatmap":
-                                insight = "Missing value heatmap shows patterns of missingness across rows and columns, highlighting data quality issues.";
-                                break;
-                            case "violin":
-                                insight = "Violin plots combine box plots and density plots, useful for comparing distributions across groups.";
-                                break;
-                            case "box":
-                                insight = "Box plots summarize distribution and outliers, ideal for comparing numeric columns across categories.";
-                                break;
-                            case "density":
-                                insight = "Density heatmap shows concentration of points in 2D numeric space, surfacing clusters and hotspots.";
-                                break;
-                            default:
-                                insight = "This chart offers a different perspective on your data. Combine with cleaning and filters to deepen insights.";
-                        }
-                        metaBody.textContent = insight;
-                    }
-
-                    showToast(`${chartType.charAt(0).toUpperCase() + chartType.slice(1)} generated!`, "success");
+                    // Text updates
+                    updateInsight(chartType);
                 } else {
-                    showToast(data.error || "Failed to generate chart", "error");
+                    alert(data.error || "Reality Collapse (Error)");
                 }
             })
-            .catch(error => {
-                showToast("Error: " + error.message, "error");
-                console.error("Viz Error:", error);
+            .catch(err => {
+                console.error(err);
+                alert("Dimensional Disconnect");
             })
             .finally(() => {
                 btn.disabled = false;
-                btn.innerHTML = originalBtnText;
+                btn.innerHTML = originalText;
             });
     }
 
-    function downloadChart() {
-        showToast("Chart download feature coming soon!", "info");
+    function updateInsight(type) {
+        const insights = {
+            histogram: "Analyze the frequency distribution of a single variable.",
+            scatter: "Reveal correlations and clusters between two continuous variables.",
+            pie: "Show proportional composition of a whole.",
+            box: "Visualize statistical distribution and identify outliers.",
+            heatmap: "Explore correlation strength between multiple variables."
+        };
+        document.getElementById("chart-meta-body").textContent = insights[type] || "Pattern analysis complete.";
     }
 
-    handleTypeChange();
+    function downloadChart() {
+        alert("Teleportation (Download) Protocol not yet initialized.");
+    }
 </script>
 {% endblock %}

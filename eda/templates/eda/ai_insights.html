@@ -1,159 +1,170 @@
 {% extends 'eda/base.html' %}
 
-{% block title %}AI Insights - Automated Insights{% endblock %}
+{% block title %}The Oracle (AI) - DataWitch{% endblock %}
 
 {% block content %}
-<div class="app-container" style="padding-top: 0;">
-    <div class="glass-card"
-        style="max-width: 900px; margin: 0 auto; min-height: 80vh; display: flex; flex-direction: column;">
+<div class="min-h-screen p-4 md:p-8 pt-24 space-y-8 animate-fade-in text-white/90">
+
+    <div class="chaos-card max-w-4xl mx-auto rounded-xl overflow-hidden flex flex-col h-[85vh] relative group">
 
         <!-- Header -->
-        <div class="text-center mb-4">
-            <div style="
-                width: 60px; height: 60px; 
-                background: linear-gradient(135deg, var(--secondary), var(--primary)); 
-                border-radius: 50%; 
-                display:flex; align-items:center; justify-content:center; 
-                margin: 0 auto 1rem auto;
-                box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
-            ">
-                <i class="fa-solid fa-brain" style="font-size: 1.8rem; color: white;"></i>
+        <div
+            class="p-6 border-b border-scarlet-900/50 bg-black/40 flex flex-col items-center text-center relative z-10 backdrop-blur-sm">
+            <div
+                class="w-16 h-16 rounded-full border-2 border-scarlet-500/50 bg-scarlet-900/20 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,41,66,0.4)] animate-pulse-slow">
+                <i class="fa-solid fa-eye text-3xl text-scarlet-500"></i>
             </div>
-            <h1 style="font-size: 2rem;">AI Assistant</h1>
-            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
-                Ask questions about your dataset. Our AI analyzes your data structure to provide intelligent answers.
+            <h1 class="font-mystic text-3xl text-white mb-2">The Oracle</h1>
+            <p class="text-scarlet-300/80 text-sm max-w-lg">
+                Commune with the data spirits. Ask for hidden truths, correlations, or prophecies.
             </p>
         </div>
 
-        <!-- Chat Container -->
-        <div id="chat-box" style="
-            flex: 1; 
-            background: rgba(0,0,0,0.2); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 12px; 
-            padding: 1.5rem; 
-            margin-bottom: 1.5rem; 
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            min-height: 400px;
-        ">
-            <!-- Welcome Message -->
-            <div class="message system">
-                <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-                <div class="bubble markdown-content">
-                    Hello! I've analyzed your dataset. Ask me about trends, correlations, or specific columns.
+        <!-- Chat Area -->
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-black/20 relative">
+            <!-- Background Sigil -->
+            <div
+                class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none sticky top-0 h-full">
+                <i class="fa-brands fa-galactic-senate text-[20rem] animate-spin-slow"></i>
+            </div>
+
+            <!-- Welcome -->
+            <div class="flex gap-4">
+                <div
+                    class="w-10 h-10 rounded-full bg-scarlet-900/40 border border-scarlet-500/30 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-eye text-scarlet-500"></i>
+                </div>
+                <div
+                    class="p-4 rounded-2xl rounded-tl-none bg-scarlet-900/10 border border-scarlet-900/30 text-gray-300 max-w-[80%] backdrop-blur-sm">
+                    <p>I see the threads of your reality. What secrets shall we unravel from your dataset today?</p>
                 </div>
             </div>
 
-            <!-- Chat history will be appended here -->
-            <div id="chat-box" class="chat-messages">
-                {% for chat in chat_history %}
-                <div class="message {% if chat.role == 'user' %}user{% else %}assistant{% endif %}">
-                    <div class="avatar">
-                        <i class="fa-solid fa-{% if chat.role == 'user' %}user{% else %}robot{% endif %}"></i>
-                    </div>
-                    <div class="bubble markdown-content">
-                        {{ chat.content }}
-                    </div>
+            <!-- History -->
+            {% for chat in chat_history %}
+            <div class="flex gap-4 {% if chat.role == 'user' %}flex-row-reverse{% endif %}">
+                <div
+                    class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                    {% if chat.role == 'user' %}bg-white/10 border border-white/20{% else %}bg-scarlet-900/40 border border-scarlet-500/30{% endif %}">
+                    <i
+                        class="fa-solid fa-{% if chat.role == 'user' %}user text-white{% else %}eye text-scarlet-500{% endif %}"></i>
                 </div>
-                {% endfor %}
+                <div
+                    class="p-4 rounded-2xl max-w-[80%] backdrop-blur-sm markdown-content
+                    {% if chat.role == 'user' %}rounded-tr-none bg-white/10 text-white{% else %}rounded-tl-none bg-scarlet-900/10 border border-scarlet-900/30 text-gray-300{% endif %}">
+                    {{ chat.content }}
+                </div>
             </div>
+            {% endfor %}
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script>
-            // Render existing messages as markdown
-            document.querySelectorAll('.markdown-content').forEach(el => {
-                el.innerHTML = marked.parse(el.textContent.trim());
-            });
-        </script>
-
-        <!-- AI Quick Actions -->
-        <div class="ai-quick-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
-                onclick="quickAction('Explain this dataset like I’m non-technical')">
-                <i class="fa-solid fa-user-graduate"></i> Non-Technical Explain
+        <!-- Quick Actions -->
+        <div class="p-4 bg-black/40 border-t border-scarlet-900/30 flex gap-2 overflow-x-auto custom-scrollbar pb-2">
+            <button onclick="quickAction('Explain this dataset to the uninitiated (non-technical)')"
+                class="whitespace-nowrap px-3 py-1.5 rounded-full bg-scarlet-900/20 border border-scarlet-500/20 text-xs text-scarlet-300 hover:bg-scarlet-900/50 hover:border-scarlet-500/50 transition-all">
+                <i class="fa-solid fa-book-open-reader mr-1"></i> Explain Simply
             </button>
-            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
-                onclick="quickAction('Summarize the main issues with this dataset in one short sentence')">
-                <i class="fa-solid fa-bolt"></i> One-Line Summary
+            <button onclick="quickAction('Reveal the anomalies and missing essences (One-line summary)')"
+                class="whitespace-nowrap px-3 py-1.5 rounded-full bg-scarlet-900/20 border border-scarlet-500/20 text-xs text-scarlet-300 hover:bg-scarlet-900/50 hover:border-scarlet-500/50 transition-all">
+                <i class="fa-solid fa-bolt mr-1"></i> Reveal Flaws
             </button>
-            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 6px 12px;"
-                onclick="quickAction('Analyze the dataset and provide a recommended cleaning plan with specific steps')">
-                <i class="fa-solid fa-list-check"></i> Cleaning Plan
+            <button onclick="quickAction('Prophesize a cleaning ritual (Cleaning Plan)')"
+                class="whitespace-nowrap px-3 py-1.5 rounded-full bg-scarlet-900/20 border border-scarlet-500/20 text-xs text-scarlet-300 hover:bg-scarlet-900/50 hover:border-scarlet-500/50 transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Cleaning Ritual
             </button>
         </div>
 
         <!-- Input Area -->
-        <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" style="display: flex; gap: 1rem;">
-            {% csrf_token %}
-            <input type="text" id="user_input"
-                placeholder="e.g., 'What is the average age?' or 'Show me the correlation between X and Y'"
-                autocomplete="off">
-            <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem;">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </form>
+        <div class="p-4 bg-black/60 backdrop-blur-md border-t border-scarlet-900/50">
+            <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" class="relative">
+                {% csrf_token %}
+                <input type="text" id="user_input" autocomplete="off" placeholder="Ask the Oracle..."
+                    class="w-full bg-black/40 border border-scarlet-900/50 rounded-full py-4 pl-6 pr-14 text-white placeholder-gray-500 focus:outline-none focus:border-scarlet-500 focus:shadow-[0_0_15px_rgba(255,41,66,0.2)] transition-all">
+
+                <button type="submit"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-scarlet-600 hover:bg-scarlet-500 text-white flex items-center justify-center transition-transform hover:scale-110 shadow-lg shadow-scarlet-900/50">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
-    .message {
-        display: flex;
-        gap: 1rem;
-        align-items: flex-start;
-        max-width: 80%;
+    .animate-pulse-slow {
+        animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
-    .message.user {
-        align-self: flex-end;
-        flex-direction: row-reverse;
+    .animate-spin-slow {
+        animation: spin 60s linear infinite;
     }
 
-    .avatar {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 0.9rem;
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
     }
 
-    .message.system .avatar {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--secondary);
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
     }
 
-    .message.user .avatar {
-        background: var(--primary);
-        color: white;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(220, 38, 38, 0.3);
+        border-radius: 10px;
     }
 
-    .bubble {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 0.8rem 1.2rem;
-        border-radius: 12px;
-        border-top-left-radius: 2px;
-        font-size: 0.95rem;
-        color: var(--text-light);
-        line-height: 1.5;
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(220, 38, 38, 0.6);
     }
 
-    .message.user .bubble {
-        background: var(--primary);
-        color: white;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 2px;
+    /* Markdown Styling overrides for the dark theme */
+    .markdown-content ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .markdown-content ol {
+        list-style-type: decimal;
+        padding-left: 1.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .markdown-content p {
+        margin-bottom: 0.5rem;
+    }
+
+    .markdown-content code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 4px;
+        rounded: 4px;
+        font-family: monospace;
+        color: #fca5a5;
+    }
+
+    .markdown-content pre {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 0.5rem 0;
+    }
+
+    .markdown-content strong {
+        color: #fff;
     }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
     var AI_URL = "{% url 'ask_ai' file_id=file_id %}";
     var chatBox = document.getElementById("chat-box");
+
+    // Render initial markdown
+    document.querySelectorAll('.markdown-content').forEach(el => {
+        el.innerHTML = marked.parse(el.textContent.trim());
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     function quickAction(text) {
         document.getElementById("user_input").value = text;
@@ -161,17 +172,31 @@
     }
 
     function appendMessage(text, type) {
-        const msgDiv = document.createElement("div");
-        msgDiv.className = `message ${type}`;
+        const div = document.createElement("div");
+        div.className = `flex gap-4 ${type === 'user' ? 'flex-row-reverse' : ''} animate-fade-in-up`;
 
-        const avatar = type === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+        const avatarColor = type === 'user'
+            ? 'bg-white/10 border border-white/20'
+            : 'bg-scarlet-900/40 border border-scarlet-500/30';
 
-        msgDiv.innerHTML = `
-            <div class="avatar">${avatar}</div>
-            <div class="bubble markdown-content">${type === 'assistant' ? marked.parse(text) : text}</div>
+        const icon = type === 'user' ? 'fa-user text-white' : 'fa-eye text-scarlet-500';
+
+        const bubbleStyle = type === 'user'
+            ? 'rounded-tr-none bg-white/10 text-white'
+            : 'rounded-tl-none bg-scarlet-900/10 border border-scarlet-900/30 text-gray-300';
+
+        const content = type === 'assistant' ? marked.parse(text) : text;
+
+        div.innerHTML = `
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${avatarColor}">
+                <i class="fa-solid ${icon}"></i>
+            </div>
+            <div class="p-4 rounded-2xl max-w-[80%] backdrop-blur-sm markdown-content ${bubbleStyle}">
+                ${content}
+            </div>
         `;
 
-        chatBox.appendChild(msgDiv);
+        chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
@@ -182,19 +207,26 @@
 
         if (!question) return;
 
-        // Add user message
         appendMessage(question, "user");
         input.value = "";
         btn.disabled = true;
 
-        // Add loading indicator
+        // Loading state
         const loadingId = "loading-" + Date.now();
         const loadingDiv = document.createElement("div");
-        loadingDiv.className = "message assistant";
+        loadingDiv.className = "flex gap-4 animate-fade-in-up";
         loadingDiv.id = loadingId;
         loadingDiv.innerHTML = `
-            <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-            <div class="bubble"><i class="fa-solid fa-ellipsis fa-bounce"></i> Thinking...</div>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-scarlet-900/40 border border-scarlet-500/30">
+                <i class="fa-solid fa-eye text-scarlet-500"></i>
+            </div>
+            <div class="p-4 rounded-2xl rounded-tl-none bg-scarlet-900/10 border border-scarlet-900/30 text-gray-300 backdrop-blur-sm">
+                <div class="flex gap-1">
+                    <span class="w-2 h-2 rounded-full bg-scarlet-500 animate-bounce"></span>
+                    <span class="w-2 h-2 rounded-full bg-scarlet-500 animate-bounce delay-100"></span>
+                    <span class="w-2 h-2 rounded-full bg-scarlet-500 animate-bounce delay-200"></span>
+                </div>
+            </div>
         `;
         chatBox.appendChild(loadingDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -202,25 +234,23 @@
         fetch(AI_URL, {
             method: "POST",
             headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ question: question })
         })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
-                const loader = document.getElementById(loadingId);
-                if (loader) loader.remove();
-
+                document.getElementById(loadingId).remove();
                 if (data.answer) {
                     appendMessage(data.answer, "assistant");
                 } else {
-                    appendMessage("Sorry, I encountered an error: " + (data.error || "Unknown error"), "assistant");
+                    appendMessage("The chaotic energies disrupt my vision. (Error: " + (data.error || "Unknown") + ")", "assistant");
                 }
             })
-            .catch(error => {
+            .catch(err => {
                 document.getElementById(loadingId).remove();
-                appendMessage("Network error. Please try again.", "system");
+                appendMessage("Connection severed.", "assistant");
             })
             .finally(() => {
                 btn.disabled = false;

@@ -1,91 +1,124 @@
 {% extends 'eda/base.html' %}
 
-{% block title %}Upload Dataset - Automated Insights{% endblock %}
+{% block title %}Open Reality Rift - DataWitch{% endblock %}
 
 {% block content %}
-<div class="upload-hero">
-    <div class="upload-container">
-        <!-- Left Panel: Info & Status -->
-        <div class="hero-left">
-            <div class="status-widget">
-                <span class="status-dot"></span> SECURE CHANNEL ACTIVE
+<div class="min-h-[calc(100vh-100px)] flex items-center justify-center relative overflow-hidden">
+    <!-- Background Decor (Red Glow) -->
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-scarlet-900/10 rounded-full blur-[120px] pointer-events-none">
+    </div>
+
+    <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-16 items-center z-10 px-4">
+
+        <!-- Left Panel: Mystical Incantation -->
+        <div class="text-left space-y-6">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-scarlet-500/30 bg-chaos-100/50 backdrop-blur-sm text-scarlet-400 text-xs font-bold tracking-[0.2em] uppercase animate-pulse-slow">
+                <span class="w-2 h-2 rounded-full bg-scarlet-500 shadow-[0_0_10px_var(--primary)]"></span>
+                Chaos Dimension Active
             </div>
 
-            <h1 class="hero-title wanda-text">INITIALIZE<br>DATA UPLINK</h1>
+            <h1
+                class="text-6xl md:text-7xl font-mystic text-transparent bg-clip-text bg-gradient-to-b from-white to-scarlet-600 drop-shadow-[0_0_30px_rgba(255,41,66,0.5)]">
+                OPEN THE<br>RIFT
+            </h1>
 
-            <p class="hero-subtitle">
-                Securely transfer your dataset to the quantum core.
-                AI analysis and automated cleaning protocols standing by.
+            <p
+                class="text-gray-400 text-lg md:text-xl font-light leading-relaxed max-w-lg border-l-2 border-scarlet-500 pl-6">
+                Channel your raw data into the reality engine.
+                We will purge the anomalies and reveal the truth hidden within.
             </p>
 
-            <!-- Feature Pills (Moved here) -->
-            <div class="feature-pills">
-                <div class="pill">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Auto-Sanitization</span>
+            <!-- Feature Glyphs -->
+            <div class="flex gap-4 pt-4">
+                <div class="px-4 py-2 border border-scarlet-900/50 bg-chaos-200/50 rounded flex items-center gap-3">
+                    <i class="fa-solid fa-wand-magic-sparkles text-scarlet-500"></i>
+                    <span class="text-sm text-gray-300 font-mystic tracking-widest uppercase">Purification</span>
                 </div>
-                <div class="pill">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Visual Transformation</span>
-                </div>
-                <div class="pill">
-                    <i class="fa-solid fa-brain"></i>
-                    <span>Neural Insights</span>
+                <div class="px-4 py-2 border border-scarlet-900/50 bg-chaos-200/50 rounded flex items-center gap-3">
+                    <i class="fa-solid fa-eye text-scarlet-500"></i>
+                    <span class="text-sm text-gray-300 font-mystic tracking-widest uppercase">True Sight</span>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel: Interaction Core -->
-        <div class="hero-right">
-            <!-- Upload Card -->
-            <div class="upload-card glass-card tilt-card">
-                <div class="card-glow-bg"></div> <!-- Arc Reactor Glow behind -->
-                <form method="post" enctype="multipart/form-data" id="upload-form">
+        <!-- Right Panel: The Altar (Upload Form) -->
+        <div class="relative">
+            <div class="chaos-card rounded-2xl p-8 md:p-12 relative group">
+                <!-- Hover Glow -->
+                <div
+                    class="absolute inset-0 bg-scarlet-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="upload-form" class="relative z-10 space-y-8">
                     {% csrf_token %}
 
                     <!-- Drop Zone -->
-                    <div id="drop-zone" class="drop-zone">
-                        <div class="scan-line"></div>
-                        <div class="drop-zone-content">
-                            <div class="upload-icon">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                            </div>
-                            <h3 class="drop-title wanda-text">TESSERACT UPLINK</h3>
-                            <p class="drop-subtitle">INITIATE UPLOAD SEQUENCE</p>
-                            <p id="file-name" class="file-name"></p>
+                    <div id="drop-zone"
+                        class="border-2 border-dashed border-scarlet-900/50 rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:border-scarlet-500 hover:bg-scarlet-900/10 hover:shadow-[inset_0_0_30px_rgba(255,41,66,0.2)] group-hover:scale-[1.02]">
+
+                        <div
+                            class="w-20 h-20 rounded-full bg-chaos-300 flex items-center justify-center mb-6 shadow-glow border border-scarlet-500/30 group-hover:rotate-12 transition-transform duration-500">
+                            <i class="fa-solid fa-cloud-bolt text-3xl text-scarlet-500"></i>
+                        </div>
+
+                        <h3 class="font-mystic text-xl text-white tracking-widest mb-2">Summon File</h3>
+                        <p class="text-scarlet-400/60 text-xs uppercase tracking-[0.2em] mb-4">Drag & Drop or Click to
+                            Invoke</p>
+
+                        <p id="file-name" class="text-scarlet-400 font-mono text-sm min-h-[1.5em]"></p>
+
+                        <div class="opacity-0 absolute inset-0 cursor-pointer">
                             {{ form.file }}
                         </div>
-
-                        <!-- Tech overlay corners -->
-                        <div class="corner corner-tl"></div>
-                        <div class="corner corner-tr"></div>
-                        <div class="corner corner-bl"></div>
-                        <div class="corner corner-br"></div>
                     </div>
 
-                    <!-- Progress Bar (Hidden by default) -->
-                    <div id="progress-container" class="progress-section" style="display: none;">
-                        <div class="progress-label">
-                            <span id="progress-text">UPLOADING...</span>
+                    <!-- Progress Bar -->
+                    <div id="progress-container" class="hidden space-y-2">
+                        <div class="flex justify-between text-xs font-bold text-scarlet-400 tracking-widest uppercase">
+                            <span id="progress-text">Channeling...</span>
                             <span id="progress-percent">0%</span>
                         </div>
-                        <div class="progress-track">
-                            <div id="progress-bar" class="progress-fill"></div>
+                        <div class="h-1 bg-chaos-300 rounded-full overflow-hidden">
+                            <div id="progress-bar"
+                                class="h-full bg-scarlet-600 shadow-[0_0_10px_var(--primary)] w-0 transition-all duration-100 ease-out">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Dataset Name Input -->
-                    <div class="form-group">
-                        <label for="id_name">
-                            <i class="fa-solid fa-tag"></i> HIDDEN IDENTIFIER
+                    <!-- Name Input -->
+                    <div class="space-y-2">
+                        <label for="id_name" class="text-scarlet-500 text-xs font-bold tracking-[0.2em] uppercase">
+                            <i class="fa-solid fa-sigil mr-2"></i> Incantation Name
                         </label>
                         {{ form.name }}
+                        <!-- Styling the Django widget via CSS targeting since it renders plain HTML -->
+                        <style>
+                            #id_name {
+                                width: 100%;
+                                background: rgba(0, 0, 0, 0.3);
+                                border: 1px solid rgba(131, 5, 25, 0.4);
+                                padding: 1rem;
+                                border-radius: 0.5rem;
+                                color: white;
+                                font-family: 'Inter', sans-serif;
+                            }
+
+                            #id_name:focus {
+                                border-color: var(--primary);
+                                outline: none;
+                                box-shadow: 0 0 15px rgba(255, 41, 66, 0.2);
+                            }
+                        </style>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary thor-btn w-full btn-lg" id="submit-btn" disabled>
-                        <i class="fa-solid fa-rocket"></i>
-                        <span>ENGAGE PROTOCOLS</span>
+                    <!-- Submit -->
+                    <button type="submit"
+                        class="btn-chaos w-full text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed group-hover:shadow-glow"
+                        id="submit-btn" disabled>
+                        <i class="fa-solid fa-meteor mr-2"></i>
+                        Cast Spell
                     </button>
                 </form>
             </div>
@@ -93,371 +126,49 @@
     </div>
 </div>
 
-<style>
-    /* Fixed Page Layout - No Scrolling */
-    .upload-hero {
-        height: calc(100vh - 80px);
-        /* Fill screen minus navbar */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 var(--space-2xl);
-        position: relative;
-        overflow: hidden;
-        /* Crucial for "one frame" request */
-    }
-
-    .upload-container {
-        width: 100%;
-        max-width: 1400px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        /* Split screen */
-        gap: var(--space-3xl);
-        align-items: center;
-        animation: fadeIn 0.8s ease-out;
-    }
-
-    @keyframes zoomIn {
-        from {
-            transform: scale(0.9);
-            opacity: 0;
-        }
-
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    /* Left Panel Styles */
-    .hero-left {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-    }
-
-    .hero-title {
-        font-family: 'Outfit', sans-serif;
-        font-size: 4.5rem;
-        /* Larger, more cinematic */
-        line-height: 1;
-        letter-spacing: 0.05em;
-        margin-bottom: var(--space-lg);
-        background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
-        text-align: left;
-    }
-
-    .hero-subtitle {
-        font-size: 1.1rem;
-        color: var(--text-secondary);
-        max-width: 90%;
-        margin-bottom: var(--space-2xl);
-        text-align: left;
-        line-height: 1.6;
-        border-left: 2px solid var(--primary);
-        padding-left: var(--space-md);
-    }
-
-    /* Right Panel Styles */
-    .hero-right {
-        perspective: 1000px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .upload-card {
-        padding: var(--space-2xl);
-        width: 100%;
-        max-width: 550px;
-        border: 1px solid rgba(0, 243, 255, 0.3);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        position: relative;
-    }
-
-    /* Arc Reactor Glow Effect */
-    .card-glow-bg {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(0, 243, 255, 0.2) 0%, transparent 70%);
-        z-index: -1;
-        animation: pulseGlow 4s ease-in-out infinite;
-    }
-
-    @keyframes pulseGlow {
-
-        0%,
-        100% {
-            opacity: 0.5;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        50% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.2);
-        }
-    }
-
-    /* Drop Zone Updates */
-    .drop-zone {
-        border: 1px dashed var(--glass-border);
-        border-radius: var(--radius-lg);
-        padding: var(--space-2xl);
-        text-align: center;
-        transition: all var(--transition-base);
-        cursor: pointer;
-        background: rgba(0, 0, 0, 0.3);
-        margin-bottom: var(--space-xl);
-        position: relative;
-        overflow: hidden;
-        height: 250px;
-        /* Fixed height for consistency */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .drop-zone.drag-active {
-        border-color: var(--primary);
-        background: rgba(0, 243, 255, 0.05);
-        box-shadow: inset 0 0 30px var(--primary-glow);
-    }
-
-    .drop-title {
-        font-size: 1.4rem;
-        margin-bottom: var(--space-xs);
-        color: var(--text-primary);
-        font-weight: 700;
-        letter-spacing: 0.1em;
-    }
-
-    .drop-subtitle {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-    }
-
-    /* Feature Pills Horizontal */
-    .feature-pills {
-        display: flex;
-        gap: var(--space-sm);
-        flex-wrap: wrap;
-        justify-content: flex-start;
-    }
-
-    .pill {
-        background: rgba(0, 243, 255, 0.05);
-        border: 1px solid var(--glass-border);
-        color: var(--primary);
-        font-size: 0.8rem;
-        padding: 6px 16px;
-    }
-
-    /* Helper Animations */
-    .status-widget {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(16, 185, 129, 0.1);
-        border-left: 2px solid var(--success);
-        padding: 6px 16px;
-        font-size: 0.8rem;
-        color: var(--success);
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        margin-bottom: var(--space-lg);
-        backdrop-filter: blur(4px);
-    }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--success);
-        border-radius: 50%;
-        box-shadow: 0 0 8px var(--success);
-        animation: blink 2s infinite;
-    }
-
-    /* Responsive */
-    @media (max-width: 1024px) {
-        .upload-container {
-            grid-template-columns: 1fr;
-            text-align: center;
-        }
-
-        .upload-hero {
-            height: auto;
-            overflow-y: auto;
-            padding: var(--space-md);
-        }
-
-        .hero-left {
-            align-items: center;
-            margin-bottom: var(--space-xl);
-        }
-
-        .hero-title,
-        .hero-subtitle {
-            text-align: center;
-        }
-
-        .hero-subtitle {
-            border-left: none;
-            padding-left: 0;
-        }
-
-        .feature-pills {
-            justify-content: center;
-        }
-    }
-
-    /* Reused Styles */
-    .scan-line {
-        /* ... existing scan styles ... */
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--primary), transparent);
-        box-shadow: 0 0 15px var(--primary);
-        opacity: 0.7;
-        animation: scan 3s ease-in-out infinite;
-        z-index: 1;
-        pointer-events: none;
-    }
-
-    @keyframes scan {
-        0% {
-            top: 0;
-            opacity: 0;
-        }
-
-        50% {
-            opacity: 1;
-        }
-
-        100% {
-            top: 100%;
-            opacity: 0;
-        }
-    }
-
-    .upload-icon {
-        width: 80px;
-        height: 80px;
-        margin-bottom: var(--space-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .upload-icon i {
-        font-size: 2.5rem;
-        color: var(--primary);
-    }
-
-    .corner {
-        position: absolute;
-        width: 15px;
-        height: 15px;
-        border-color: var(--primary);
-        border-style: solid;
-        opacity: 0.5;
-    }
-
-    .corner-tl {
-        top: 0;
-        left: 0;
-        border-width: 2px 0 0 2px;
-    }
-
-    .corner-tr {
-        top: 0;
-        right: 0;
-        border-width: 2px 2px 0 0;
-    }
-
-    .corner-bl {
-        bottom: 0;
-        left: 0;
-        border-width: 0 0 2px 2px;
-    }
-
-    .corner-br {
-        bottom: 0;
-        right: 0;
-        border-width: 0 2px 2px 0;
-    }
-
-    .file-name {
-        color: var(--success);
-        font-family: monospace;
-        margin-top: 10px;
-        min-height: 1.2em;
-    }
-</style>
-
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('upload-form');
-
-        // Safety check to prevent double-binding
-        if (form.getAttribute('data-bound')) return;
-        form.setAttribute('data-bound', 'true');
-
-        const fileInput = document.getElementById('id_file');
+        const fileInput = document.querySelector('input[type="file"]'); // Getting the hidden input
         const submitBtn = document.getElementById('submit-btn');
         const dropZone = document.getElementById('drop-zone');
+        const fileNameEl = document.getElementById('file-name');
+
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
         const progressPercent = document.getElementById('progress-percent');
         const progressText = document.getElementById('progress-text');
 
-        // --- File Selection Logic ---
-        function updateButtonState() {
+        // File Selection
+        function updateState() {
             if (fileInput.files && fileInput.files.length > 0) {
                 submitBtn.disabled = false;
-                submitBtn.classList.add('btn-primary'); // Make sure it's bright
-
-                const fileNameEl = document.getElementById('file-name');
-                if (fileNameEl) {
-                    fileNameEl.textContent = `Target Acquired: ${fileInput.files[0].name}`;
-                    fileNameEl.style.color = 'var(--success)';
-                }
+                fileNameEl.textContent = fileInput.files[0].name;
+                fileNameEl.classList.add('animate-pulse');
+                dropZone.classList.add('border-scarlet-500', 'bg-scarlet-900/20');
             } else {
                 submitBtn.disabled = true;
+                fileNameEl.textContent = '';
+                dropZone.classList.remove('border-scarlet-500', 'bg-scarlet-900/20');
             }
         }
+        fileInput.addEventListener('change', updateState);
 
-        fileInput.addEventListener('change', updateButtonState);
+        // Drag & Drop
+        dropZone.addEventListener('click', () => fileInput.click()); // Proxy click
 
-        // Drag & Drop Visuals
         ['dragenter', 'dragover'].forEach(e => {
             dropZone.addEventListener(e, (evt) => {
                 evt.preventDefault();
-                dropZone.classList.add('drag-active');
+                dropZone.classList.add('border-scarlet-400', 'scale-[1.02]');
             });
         });
 
         ['dragleave', 'drop'].forEach(e => {
             dropZone.addEventListener(e, (evt) => {
                 evt.preventDefault();
-                dropZone.classList.remove('drag-active');
+                dropZone.classList.remove('border-scarlet-400', 'scale-[1.02]');
             });
         });
 
@@ -465,75 +176,55 @@
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 fileInput.files = files;
-                updateButtonState();
+                updateState();
             }
         });
 
-        // --- AJAX Upload Logic ---
+        // AJAX Upload
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-
             const file = fileInput.files[0];
-            if (!file) {
-                showToast('No file selected.', 'warning');
-                return;
-            }
+            if (!file) return;
 
-            // UI Updates
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> UPLOADING...';
-            progressContainer.style.display = 'block';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CHANNELLING...';
+            progressContainer.classList.remove('hidden');
 
-            // Create Form Data
             const formData = new FormData(form);
-
-            // XHR Request
             const xhr = new XMLHttpRequest();
             xhr.open('POST', form.action || window.location.href, true);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-            // Progress
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
-                    const percentComplete = Math.round((e.loaded / e.total) * 100);
-                    progressBar.style.width = percentComplete + '%';
-                    progressPercent.textContent = percentComplete + '%';
-
-                    if (percentComplete === 100) {
-                        progressText.textContent = 'PROCESSING...';
-                    }
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = pct + '%';
+                    progressPercent.textContent = pct + '%';
                 }
             };
 
-            // Complete
             xhr.onload = function () {
                 if (xhr.status === 200 || xhr.status === 302) {
-                    // Success
                     progressBar.style.width = '100%';
-                    progressPercent.textContent = '100%';
-                    progressText.textContent = 'COMPLETE';
+                    progressText.textContent = 'REALITY SHIFTING...';
 
-                    showToast('Upload Successful! Redirecting...', 'success');
+                    // Specific Scarlet redirection visual
+                    document.body.style.transition = 'filter 1s ease';
+                    document.body.style.filter = 'brightness(0) sepia(1) hue-rotate(-50deg) saturate(5)';
 
-                    // Check if redirected URL is different, or parse response if it's HTML
-                    // Since it's a redirect, XHR follows it transparently. The responseURL will be the new page.
                     const targetUrl = xhr.responseURL;
-
-                    setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 1000);
+                    setTimeout(() => window.location.href = targetUrl, 800);
                 } else {
-                    showToast('Upload Failed. Status: ' + xhr.status, 'error');
+                    alert('Ritual Failed: ' + xhr.status);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> ENGAGE PROTOCOLS';
-                    progressContainer.style.display = 'none';
+                    submitBtn.textContent = 'RETRY SPELL';
+                    progressContainer.classList.add('hidden');
                 }
             };
 
-            xhr.onerror = function () {
-                showToast('Network Error', 'error');
+            xhr.onerror = () => {
+                alert('Dimensional Severance (Network Error)');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> ENGAGE PROTOCOLS';
             };
 
             xhr.send(formData);
