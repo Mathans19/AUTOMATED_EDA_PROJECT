@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WANDA Analytics{% endblock %}</title>
+
+    <!-- Fonts: Cinzel (Display) & Inter (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Plotly.js for Visualizations -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js" charset="utf-8"></script>
+
+    <style>
+        /* ==================== WANDA/SCARLET WITCH DESIGN SYSTEM ==================== */
+
+        :root {
+            /* Core Scarlet Colors */
+            --scarlet: 348 83% 47%;
+            --scarlet-dark: 348 83% 27%;
+            --scarlet-glow: 348 100% 60%;
+            --crimson: 0 84% 40%;
+            --blood: 0 100% 25%;
+            --darkhold: 0 100% 15%;
+
+            /* Mystical Purples */
+            --mystic: 280 60% 50%;
+            --mystic-dark: 280 60% 20%;
+            --chaos: 320 70% 40%;
+
+            /* Dark Theme */
+            --background: 240 10% 4%;
+            --foreground: 0 0% 95%;
+
+            --card: 240 10% 8%;
+            --card-foreground: 0 0% 95%;
+
+            --popover: 240 10% 6%;
+            --popover-foreground: 0 0% 95%;
+
+            --primary: 348 83% 47%;
+            --primary-foreground: 0 0% 100%;
+
+            --secondary: 240 10% 15%;
+            --secondary-foreground: 0 0% 90%;
+
+            --muted: 240 10% 12%;
+            --muted-foreground: 240 5% 55%;
+
+            --accent: 348 83% 47%;
+            --accent-foreground: 0 0% 100%;
+
+            --destructive: 0 84% 60%;
+            --destructive-foreground: 0 0% 100%;
+
+            --border: 240 10% 18%;
+            --input: 240 10% 15%;
+            --ring: 348 83% 47%;
+
+            --radius: 0.75rem;
+
+            /* Chaos Magic Effects */
+            --glow-sm: 0 0 10px hsl(var(--scarlet) / 0.5);
+            --glow-md: 0 0 20px hsl(var(--scarlet) / 0.4), 0 0 40px hsl(var(--scarlet) / 0.2);
+            --glow-lg: 0 0 30px hsl(var(--scarlet) / 0.5), 0 0 60px hsl(var(--scarlet) / 0.3), 0 0 100px hsl(var(--scarlet) / 0.1);
+            --glow-pulse: 0 0 40px hsl(var(--scarlet-glow) / 0.6), 0 0 80px hsl(var(--scarlet) / 0.4);
+
+            /* Glass Effect */
+            --glass-bg: hsl(240 10% 8% / 0.7);
+            --glass-border: hsl(348 83% 47% / 0.3);
+            --glass-hover: hsl(348 83% 47% / 0.15);
+        }
+
+        /* ==================== BASE STYLES ==================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: hsl(var(--background));
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: hsl(var(--scarlet-dark));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--scarlet));
+            box-shadow: var(--glow-sm);
+        }
+
+        /* ==================== UTILITY CLASSES ==================== */
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, hsl(var(--scarlet-glow)), hsl(var(--scarlet)), hsl(var(--mystic)));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px hsl(var(--scarlet) / 0.5), 0 0 20px hsl(var(--scarlet) / 0.3);
+        }
+
+        .text-glow-strong {
+            text-shadow: 0 0 20px hsl(var(--scarlet) / 0.8), 0 0 40px hsl(var(--scarlet) / 0.5), 0 0 60px hsl(var(--scarlet) / 0.3);
+        }
+
+        /* ==================== GLASS CARD ==================== */
+
+        .glass-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glow-sm);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: hsl(var(--scarlet) / 0.5);
+            box-shadow: var(--glow-md);
+            transform: translateY(-2px);
+        }
+
+        /* ==================== NAVBAR ==================== */
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+
+        .navbar-backdrop {
+            position: absolute;
+            inset: 0;
+            background: hsl(var(--background) / 0.6);
+            backdrop-filter: blur(48px);
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .navbar-energy-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, hsl(var(--scarlet) / 0.5), transparent);
+        }
+
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            color: hsl(var(--muted-foreground));
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, transparent, hsl(var(--scarlet)), transparent);
+            box-shadow: var(--glow-sm);
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: hsl(var(--foreground));
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        .nav-link.active {
+            text-shadow: 0 0 10px hsl(var(--scarlet) / 0.5);
+        }
+
+        /* ==================== MAGIC BUTTON ==================== */
+
+        .magic-btn {
+            position: relative;
+            overflow: hidden;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            border: 1px solid hsl(var(--scarlet) / 0.5);
+            background: linear-gradient(135deg, hsl(var(--scarlet-dark)), hsl(var(--blood)));
+            color: white;
+            box-shadow: 0 0 15px hsl(var(--scarlet) / 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .magic-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px hsl(var(--scarlet) / 0.6), 0 0 80px hsl(var(--scarlet) / 0.4);
+        }
+
+        .magic-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .magic-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .magic-btn-secondary {
+            background: hsl(var(--muted) / 0.5);
+            border-color: hsl(var(--border));
+            color: hsl(var(--foreground));
+            box-shadow: none;
+        }
+
+        .magic-btn-secondary:hover:not(:disabled) {
+            background: hsl(var(--muted));
+            box-shadow: none;
+        }
+
+        .magic-btn-ghost {
+            background: transparent;
+            border-color: transparent;
+            color: hsl(var(--muted-foreground));
+            box-shadow: none;
+        }
+
+        .magic-btn-ghost:hover:not(:disabled) {
+            color: hsl(var(--foreground));
+            background: hsl(var(--muted) / 0.3);
+            box-shadow: none;
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: var(--glow-sm);
+            }
+
+            50% {
+                box-shadow: var(--glow-lg);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes spin-slow {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes rune-float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.1;
+            }
+
+            50% {
+                transform: translateY(-30px) rotate(10deg);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes wisp-dance {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+
+            25% {
+                transform: translate(50px, -30px) scale(1.5);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: translate(100px, 20px) scale(0.8);
+                opacity: 0.4;
+            }
+
+            75% {
+                transform: translate(30px, 40px) scale(1.2);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes reality-glitch {
+
+            0%,
+            95%,
+            100% {
+                filter: none;
+                transform: none;
+            }
+
+            96% {
+                filter: hue-rotate(90deg) saturate(2);
+                transform: skewX(-2deg) translateX(3px);
+            }
+
+            97% {
+                filter: invert(0.1) hue-rotate(-30deg);
+                transform: skewX(1deg) translateX(-2px);
+            }
+
+            98% {
+                filter: saturate(3) contrast(1.2);
+                transform: translateY(-2px);
+            }
+        }
+
+        .energy-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .reality-glitch {
+            animation: reality-glitch 8s ease-in-out infinite;
+        }
+
+        /* ==================== HEX PATTERN BACKGROUND ==================== */
+
+        .hex-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 15V45L30 60L0 45V15L30 0z' fill='none' stroke='%23DC143C' stroke-opacity='0.05'/%3E%3C/svg%3E");
+            background-size: 60px 60px;
+        }
+
+        .comic-dots {
+            background-image: radial-gradient(hsl(var(--scarlet) / 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* ==================== ENERGY ORB ==================== */
+
+        .energy-orb {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, hsl(var(--scarlet-glow)), transparent 70%);
+            filter: blur(1px);
+            animation: orbFloat 10s ease-in-out infinite;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.6;
+            }
+
+            33% {
+                transform: translate(30px, -20px) scale(1.1);
+                opacity: 0.8;
+            }
+
+            66% {
+                transform: translate(-20px, 10px) scale(0.9);
+                opacity: 0.5;
+            }
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .nav-link span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="hex-pattern comic-dots">
+    <!-- Wanda Background -->
+    <div
+        style="position: fixed; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.15; filter: saturate(1.2); pointer-events: none; z-index: 0;">
+    </div>
+
+    <!-- Deep background gradient -->
+    <div
+        style="position: fixed; inset: 0; background: radial-gradient(ellipse at center, hsl(var(--scarlet-dark) / 0.2), transparent 70%); pointer-events: none; z-index: 0;">
+    </div>
+
+    <!-- Vignette effect -->
+    <div
+        style="position: fixed; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at center, transparent 40%, hsl(var(--background) / 0.8) 100%);">
+    </div>
+
+    <!-- Darkhold Runes -->
+    <div id="darkhold-runes" style="position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1;">
+    </div>
+
+    <!-- Hex Overlay -->
+    <div style="position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden;">
+        <!-- Hex corners will be added via JS -->
+    </div>
+
+    <!-- Chaos Energy -->
+    <div id="chaos-energy" style="position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden;"></div>
+
+    <!-- Glitch Effect -->
+    <div id="glitch-effect" style="position: fixed; inset: 0; pointer-events: none; z-index: 100; display: none;"></div>
+
+    <!-- Energy Orbs -->
+    <div class="energy-orb" style="width: 24rem; height: 24rem; top: -12rem; left: -12rem; opacity: 0.3;"></div>
+    <div class="energy-orb"
+        style="width: 16rem; height: 16rem; top: 33%; right: -8rem; opacity: 0.2; animation-delay: -3s;"></div>
+    <div class="energy-orb"
+        style="width: 12rem; height: 12rem; bottom: 25%; left: 25%; opacity: 0.25; animation-delay: -5s;"></div>
+    <div class="energy-orb"
+        style="width: 20rem; height: 20rem; bottom: 0; right: 25%; opacity: 0.15; animation-delay: -7s;"></div>
+
+    <!-- Particle Field Canvas -->
+    <canvas id="particle-canvas"
+        style="position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.6;"></canvas>
+
+    <!-- TV Static -->
+    <div style="position: fixed; inset: 0; pointer-events: none; z-index: 4; opacity: 0.02;">
+        <div
+            style="width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(var(--scarlet) / 0.03) 2px, hsl(var(--scarlet) / 0.03) 4px);">
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-backdrop"></div>
+        <div class="navbar-energy-line"></div>
+
+        <div class="container" style="position: relative; padding-top: 1rem; padding-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <!-- Logo -->
+                <a href="{% url 'upload' %}"
+                    style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+                    <div style="position: relative;">
+                        <div class="energy-pulse"
+                            style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: linear-gradient(135deg, hsl(var(--scarlet-dark)), hsl(var(--blood)), hsl(var(--mystic-dark))); display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="sparkles" style="width: 1.25rem; height: 1.25rem; color: white;"></i>
+                        </div>
+                        <div
+                            style="position: absolute; top: -0.25rem; right: -0.25rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: hsl(var(--scarlet-glow)); animation: glow 2s ease-in-out infinite;">
+                        </div>
+                    </div>
+                    <span style="font-family: 'Cinzel', serif; font-size: 1.25rem; letter-spacing: 0.05em;">
+                        <span class="gradient-text" style="font-weight: 600;">WANDA</span>
+                        <span
+                            style="color: hsl(var(--muted-foreground)); margin-left: 0.25rem; font-family: 'Inter', sans-serif; font-size: 0.875rem;">Analytics</span>
+                    </span>
+                </a>
+
+                <!-- Navigation Links -->
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <a href="{% url 'upload' %}"
+                        class="nav-link {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
+                        <i data-lucide="upload" style="width: 1rem; height: 1rem;"></i>
+                        <span>Upload</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="bar-chart-3" style="width: 1rem; height: 1rem;"></i>
+                        <span>EDA Report</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="sparkles" style="width: 1rem; height: 1rem;"></i>
+                        <span>Clean Data</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="line-chart" style="width: 1rem; height: 1rem;"></i>
+                        <span>Visualize</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="brain" style="width: 1rem; height: 1rem;"></i>
+                        <span>AI Insights</span>
+                    </a>
+                </div>
+
+                <!-- Status Indicator -->
+                <div
+                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: hsl(var(--muted-foreground));">
+                    <div
+                        style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: hsl(var(--scarlet)); animation: pulse 2s ease-in-out infinite;">
+                    </div>
+                    <span style="display: none; font-family: 'Inter', sans-serif;">Reality Online</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main style="position: relative; z-index: 10; padding-top: 6rem; padding-bottom: 3rem;">
+        <div class="reality-glitch">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Scarlet Witch Crown Watermark -->
+    <div style="position: fixed; bottom: 1.5rem; right: 1.5rem; opacity: 0.1; pointer-events: none; z-index: 20;">
+        <svg width="60" height="50" viewBox="0 0 60 50">
+            <defs>
+                <linearGradient id="crownGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="hsl(348, 83%, 47%)" />
+                    <stop offset="100%" stop-color="hsl(348, 100%, 60%)" />
+                </linearGradient>
+            </defs>
+            <path d="M30,5 L20,25 L5,20 L15,45 L30,40 L45,45 L55,20 L40,25 L30,5 Z" fill="url(#crownGrad)"
+                class="animate-pulse" />
+            <circle cx="30" cy="20" r="4" fill="hsl(348, 100%, 70%)" />
+        </svg>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Darkhold Runes
+        const RUNE_SYMBOLS = ["ᛟ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᛁ", "ᛃ", "ᛇ", "ᛈ", "ᛉ", "ᛊ", "ᛏ", "ᛒ", "ᛖ", "ᛗ", "ᛚ", "ᛜ", "ᛞ"];
+        const runesContainer = document.getElementById('darkhold-runes');
+
+        for (let i = 0; i < 15; i++) {
+            const rune = document.createElement('span');
+            rune.textContent = RUNE_SYMBOLS[Math.floor(Math.random() * RUNE_SYMBOLS.length)];
+            rune.style.position = 'absolute';
+            rune.style.left = Math.random() * 100 + '%';
+            rune.style.top = Math.random() * 100 + '%';
+            rune.style.fontSize = (1 + Math.random() * 2) + 'rem';
+            rune.style.fontFamily = "'Cinzel', serif";
+            rune.style.color = 'hsl(348 83% 47% / 0.15)';
+            rune.style.textShadow = '0 0 20px hsl(348 83% 47% / 0.5)';
+            rune.style.animation = `rune-float ${10 + Math.random() * 10}s ease-in-out infinite`;
+            rune.style.animationDelay = Math.random() * 10 + 's';
+            runesContainer.appendChild(rune);
+        }
+
+        // Chaos Energy Wisps
+        const chaosContainer = document.getElementById('chaos-energy');
+        for (let i = 0; i < 8; i++) {
+            const wisp = document.createElement('div');
+            wisp.style.position = 'absolute';
+            wisp.style.width = '4px';
+            wisp.style.height = '4px';
+            wisp.style.background = 'hsl(var(--scarlet-glow))';
+            wisp.style.borderRadius = '50%';
+            wisp.style.boxShadow = '0 0 10px hsl(var(--scarlet)), 0 0 20px hsl(var(--scarlet) / 0.5)';
+            wisp.style.left = Math.random() * 100 + '%';
+            wisp.style.top = Math.random() * 100 + '%';
+            wisp.style.animation = `wisp-dance ${8 + Math.random() * 8}s ease-in-out infinite`;
+            wisp.style.animationDelay = Math.random() * 5 + 's';
+            chaosContainer.appendChild(wisp);
+        }
+
+        // Glitch Effect
+        function triggerGlitch() {
+            if (Math.random() > 0.7) {
+                const glitchEl = document.getElementById('glitch-effect');
+                const glitchType = Math.floor(Math.random() * 3);
+
+                if (glitchType === 0) {
+                    glitchEl.innerHTML = '<div style="position: absolute; inset: 0; background: hsl(var(--scarlet) / 0.1); mix-blend-mode: screen; transform: translateX(-4px);"></div><div style="position: absolute; inset: 0; background: hsl(var(--mystic) / 0.1); mix-blend-mode: screen; transform: translateX(4px);"></div>';
+                } else if (glitchType === 1) {
+                    glitchEl.innerHTML = '<div style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(348 83% 47% / 0.1) 2px, hsl(348 83% 47% / 0.1) 4px);"></div>';
+                } else {
+                    const angle = Math.random() * 360;
+                    glitchEl.innerHTML = `<div style="position: absolute; inset: 0; background: linear-gradient(${angle}deg, transparent 45%, hsl(348 83% 47% / 0.2) 49%, hsl(280 60% 50% / 0.2) 51%, transparent 55%);"></div>`;
+                }
+
+                glitchEl.style.display = 'block';
+                setTimeout(() => {
+                    glitchEl.style.display = 'none';
+                }, 150 + Math.random() * 200);
+            }
+        }
+
+        setInterval(triggerGlitch, 4000 + Math.random() * 6000);
+
+        // Particle Field
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: 0, y: 0 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 3 + 1,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    speedY: (Math.random() - 0.5) * 0.5,
+                    opacity: Math.random() * 0.5 + 0.2,
+                    hue: Math.random() > 0.7 ? 280 : 348
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                // Mouse influence
+                const dx = mouse.x - p.x;
+                const dy = mouse.y - p.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 150) {
+                    const force = (150 - distance) / 150;
+                    p.x -= (dx / distance) * force * 2;
+                    p.y -= (dy / distance) * force * 2;
+                }
+
+                // Update position
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                // Wrap around
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                // Draw particle
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+                gradient.addColorStop(0, `hsla(${p.hue}, 83%, 50%, ${p.opacity})`);
+                gradient.addColorStop(0.5, `hsla(${p.hue}, 83%, 50%, ${p.opacity * 0.3})`);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            });
+
+            // Draw connections
+            ctx.strokeStyle = 'hsla(348, 83%, 50%, 0.1)';
+            ctx.lineWidth = 0.5;
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        resizeCanvas();
+        animateParticles();
+
+        // TiltCard Effect
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -5;
+                const rotateY = ((x - centerX) / centerX) * 5;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

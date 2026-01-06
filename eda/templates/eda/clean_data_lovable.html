@@ -1,0 +1,237 @@
+{% extends 'eda/base_lovable.html' %}
+{% load eda_extras %}
+
+{% block title %}Clean Data - WANDA Analytics{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div style="margin-bottom: 3rem;">
+        <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; font-weight: 700; margin-bottom: 1rem;">
+            <span class="gradient-text text-glow">Reality Manipulation</span>
+        </h1>
+        <p
+            style="color: hsl(var(--muted-foreground)); font-size: 1rem; max-width: 42rem; font-family: 'Inter', sans-serif;">
+            Reshape your data with chaos magic. Transform, cleanse, and transmute your dataset into its purest form.
+        </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+        <!-- Operations Panel -->
+        <div>
+            <div class="glass-card" style="padding: 1.5rem; position: sticky; top: 7rem;">
+                <h2
+                    style="font-family: 'Cinzel', serif; font-size: 1.25rem; color: hsl(var(--foreground)); margin-bottom: 1.5rem;">
+                    Transformation Spells</h2>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    {% for op in operations %}
+                    <button class="operation-btn {% if op.id == selected_op %}active{% endif %}" data-op="{{ op.id }}">
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <div class="op-icon-container">
+                                <i data-lucide="{{ op.icon }}" class="op-icon"></i>
+                            </div>
+                            <div>
+                                <p class="op-label">{{ op.label }}</p>
+                                <p
+                                    style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 0.25rem;">
+                                    {{ op.description }}</p>
+                            </div>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <button class="magic-btn" style="width: 100%;" id="apply-btn" onclick="applyTransformation()">
+                    <i data-lucide="wand-2" style="width: 1rem; height: 1rem;"></i>
+                    <span>Apply Transformation</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div>
+            <div class="glass-card" style="padding: 1.5rem; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 1.25rem; color: hsl(var(--foreground));">Data
+                        Preview</h2>
+                    <span
+                        style="font-family: 'Inter', sans-serif; font-size: 0.875rem; color: hsl(var(--muted-foreground));">
+                        {{ data|length }} rows • {{ columns|length }} columns
+                    </span>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid hsl(var(--border));">
+                                {% for col in columns %}
+                                <th
+                                    style="text-align: left; padding: 0.75rem 1rem; font-family: 'Inter', sans-serif; font-size: 0.75rem; color: hsl(var(--muted-foreground)); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    {{ col }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr class="data-row" data-row-id="{{ forloop.counter0 }}"
+                                style="border-bottom: 1px solid hsl(var(--border) / 0.5); transition: all 0.5s;">
+                                {% for col in columns %}
+                                <td style="padding: 0.75rem 1rem;">
+                                    {% if row|get_item:col == None or row|get_item:col == '' %}
+                                    <span
+                                        style="display: flex; align-items: center; gap: 0.25rem; color: hsl(var(--scarlet)); font-size: 0.875rem;">
+                                        <i data-lucide="x-circle" style="width: 0.75rem; height: 0.75rem;"></i>
+                                        null
+                                    </span>
+                                    {% else %}
+                                    <span class="{% if 'id' in col|lower %}font-mono{% else %}font-sans{% endif %}"
+                                        style="font-size: 0.875rem; color: hsl(var(--muted-foreground));">{{
+                                        row|get_item:col }}</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
+                {% for stat in quick_stats %}
+                <div class="glass-card" style="padding: 1rem; text-align: center;">
+                    <p
+                        style="font-family: 'Cinzel', serif; font-size: 1.5rem; --stat-color: {{ stat.color|default:'hsl(var(--scarlet))' }}; color: var(--stat-color);">
+
+                        {{ stat.value }}</p>
+                    <p
+                        style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: hsl(var(--muted-foreground));">
+                        {{ stat.label }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .operation-btn {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: left;
+        transition: all 0.3s;
+        cursor: pointer;
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid transparent;
+    }
+
+    .operation-btn:hover {
+        border-color: hsl(var(--border));
+    }
+
+    .operation-btn.active {
+        background: hsl(var(--scarlet-dark) / 0.3);
+        border: 1px solid hsl(var(--scarlet) / 0.5);
+        box-shadow: var(--glow-sm);
+    }
+
+    .op-icon-container {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: hsl(var(--muted));
+        transition: background 0.3s;
+    }
+
+    .operation-btn.active .op-icon-container {
+        background: hsl(var(--scarlet) / 0.2);
+    }
+
+    .op-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: hsl(var(--muted-foreground));
+    }
+
+    .operation-btn.active .op-icon {
+        color: hsl(var(--scarlet));
+    }
+
+    .op-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: hsl(var(--muted-foreground));
+    }
+
+    .operation-btn.active .op-label {
+        color: hsl(var(--foreground));
+    }
+
+    .data-row.processed {
+        background: hsl(var(--scarlet-dark) / 0.1);
+        box-shadow: inset 0 0 20px hsl(348, 83%, 50%, 0.1);
+    }
+
+    .font-mono {
+        font-family: monospace;
+    }
+
+    .font-sans {
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    let selectedOp = null;
+
+    // Operation selection
+    document.querySelectorAll('.operation-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.operation-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'hsl(var(--muted) / 0.3)';
+                b.style.borderColor = 'transparent';
+                b.style.boxShadow = 'none';
+            });
+            this.classList.add('active');
+            this.style.background = 'hsl(var(--scarlet-dark) / 0.3)';
+            this.style.borderColor = 'hsl(var(--scarlet) / 0.5)';
+            this.style.boxShadow = 'var(--glow-sm)';
+            selectedOp = this.dataset.op;
+        });
+    });
+
+    // Apply transformation
+    function applyTransformation() {
+        if (!selectedOp) {
+            alert('Please select a transformation spell first.');
+            return;
+        }
+
+        // Simulate processing animation
+        const rows = document.querySelectorAll('.data-row');
+        rows.forEach((row, i) => {
+            setTimeout(() => {
+                row.classList.add('processed');
+            }, i * 200);
+        });
+
+        // In real implementation, this would call the backend
+        // fetch('/apply_cleaning/', { method: 'POST', body: JSON.stringify({ operation: selectedOp }) })
+    }
+
+    // Initialize Lucide icons
+    setTimeout(() => {
+        lucide.createIcons();
+    }, 100);
+</script>
+{% endblock %}
+{% endblock %}
